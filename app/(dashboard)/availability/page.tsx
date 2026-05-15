@@ -50,7 +50,7 @@ export default function AvailabilityPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardContent className="p-6">
                 <div className="flex items-center gap-4">
                   <div className="rounded-lg bg-green-100 p-3">
@@ -64,7 +64,7 @@ export default function AvailabilityPage() {
                   </div>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="p-6">
