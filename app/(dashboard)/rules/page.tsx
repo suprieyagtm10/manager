@@ -1,151 +1,62 @@
-import {
-  StaffMember,
-  Shift,
-  LeaveRequest,
-  StaffSuggestion,
-  SuggestionRank,
-  SHIFT_CONFIG,
-} from "@/lib/types"
+import { AppHeader } from "@/components/app-header"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
-import { startOfWeek, endOfWeek, isWithinInterval, parseISO, subDays } from "date-fns"
+const rules = [
+  {
+    name: "No Double Booking",
+    description: "Staff cannot be assigned to more than one shift at the same time.",
+    status: "Active",
+  },
+  {
+    name: "Night to Morning Gap",
+    description: "Avoid assigning staff to a morning shift straight after a night shift.",
+    status: "Active",
+  },
+  {
+    name: "Weekly Hour Limit",
+    description: "Staff should not exceed their contracted weekly hours.",
+    status: "Active",
+  },
+  {
+    name: "Role Matching",
+    description: "Staff should only be assigned to suitable roles.",
+    status: "Active",
+  },
+  {
+    name: "Leave Check",
+    description: "Staff on approved leave should not be assigned to shifts.",
+    status: "Active",
+  },
+]
 
-// Calculate hours for a shift
-function getShiftHours(shiftType: string): number {
-  const config = SHIFT_CONFIG[shiftType as keyof typeof SHIFT_CONFIG]
+export default function RulesPage() {
+  return (
+    <div className="flex flex-col h-full">
+      <AppHeader
+        title="Roster Rules"
+        subtitle="View rostering rules and compliance checks"
+      />
 
-  if (!config) return 8
-
-  const startHour = Number(config.startTime.split(":")[0])
-  const endHour = Number(config.endTime.split(":")[0])
-
-  return endHour > startHour
-    ? endHour - startHour
-    : 24 - startHour + endHour
-}
-
-// Weekly hours
-export function getWeeklyHours(
-  staffId: string,
-  weekStartDate: Date,
-  shifts: Shift[]
-): number {
-  const weekStart = startOfWeek(weekStartDate, { weekStartsOn: 1 })
-  const weekEnd = endOfWeek(weekStartDate, { weekStartsOn: 1 })
-
-  const assignedShifts = shifts.filter((shift) => {
-    const shiftDate = parseISO(shift.date)
-
-    return (
-      shift.required_role &&
-      isWithinInterval(shiftDate, {
-        start: weekStart,
-        end: weekEnd,
-      })
-    )
-  })
-
-  return assignedShifts.reduce(
-    (total, shift) => total + getShiftHours(shift.shift_type),
-    0
+      <div className="flex-1 overflow-auto p-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          {rules.map((rule) => (
+            <Card key={rule.name}>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-4">
+                  <CardTitle className="text-lg">{rule.name}</CardTitle>
+                  <Badge variant="secondary">{rule.status}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  {rule.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
   )
-}
-
-// Check leave
-export function isStaffOnLeave(
-  staffId: string,
-  date: Date,
-  leaves: LeaveRequest[]
-): boolean {
-  return leaves.some((leave) => {
-    const start = parseISO(leave.start_date)
-    const end = parseISO(leave.end_date)
-
-    return (
-      leave.staff_id === staffId &&
-      leave.status === "approved" &&
-      isWithinInterval(date, { start, end })
-    )
-  })
-}
-
-// Unsafe night → morning
-export function hasUnsafeNightMorningSchedule(
-  shift: Shift,
-  previousShifts: Shift[]
-): boolean {
-  if (shift.shift_type !== "morning") return false
-
-  const previousDay = subDays(parseISO(shift.date), 1)
-
-  return previousShifts.some(
-    (s) =>
-      s.shift_type === "night" &&
-      parseISO(s.date).toDateString() === previousDay.toDateString()
-  )
-}
-
-// Staff suggestions
-export function getStaffSuggestions(
-  availableStaff: StaffMember[],
-  shift: Shift,
-  shifts: Shift[],
-  leaves: LeaveRequest[]
-): StaffSuggestion[] {
-  const suggestions: StaffSuggestion[] = []
-
-  for (const staff of availableStaff) {
-    const warnings: string[] = []
-    let rank: SuggestionRank = "best-match"
-
-    // Role mismatch
-    if (
-      shift.required_role !== "ANY" &&
-      staff.role !== shift.required_role
-    ) {
-      continue
-    }
-
-    // Leave check
-    if (isStaffOnLeave(staff.id, parseISO(shift.date), leaves)) {
-      warnings.push("Staff member is on leave")
-      rank = "not-suitable"
-    }
-
-    // Weekly hours
-    const weeklyHours = getWeeklyHours(
-      staff.id,
-      parseISO(shift.date),
-      shifts
-    )
-
-    const contracted = staff.contracted_hours || 38
-
-    if (weeklyHours > contracted) {
-      warnings.push("Exceeds contracted weekly hours")
-      rank = "warning"
-    }
-
-    suggestions.push({
-      staff,
-      rank,
-      warnings,
-      weeklyHoursAssigned: weeklyHours,
-      matchScore: rank === "best-match" ? 100 : rank === "warning" ? 50 : 0,
-    })
-  }
-
-  const rankOrder: Record<SuggestionRank, number> = {
-    "best-match": 0,
-    available: 1,
-    warning: 2,
-    "not-suitable": 3,
-  }
-
-  return suggestions.sort((a, b) => {
-    const diff = rankOrder[a.rank] - rankOrder[b.rank]
-
-    if (diff !== 0) return diff
-
-    return a.weeklyHoursAssigned - b.weeklyHoursAssigned
-  })
 }
