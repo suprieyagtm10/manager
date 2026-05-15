@@ -1,89 +1,100 @@
-"use client";
+"use client"
 
-import { format } from "date-fns";
-import { Clock, User, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { getShiftsByDate } from "@/lib/mock-data";
-import { ROLE_CONFIG, SHIFT_CONFIG, STATUS_CONFIG } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Clock } from "lucide-react"
+import { format } from "date-fns"
+import { ShiftWithAssignment, ROLE_CONFIG, SHIFT_CONFIG } from "@/lib/types"
 
-export function TodayRoster() {
-  const today = new Date();
-  const todayShifts = getShiftsByDate(today);
+interface TodayRosterProps {
+  shifts: ShiftWithAssignment[]
+}
 
-  const shiftsByType = {
-    morning: todayShifts.filter((s) => s.shiftType === "morning"),
-    "kitchen-afternoon": todayShifts.filter((s) => s.shiftType === "kitchen-afternoon"),
-    evening: todayShifts.filter((s) => s.shiftType === "evening"),
-    night: todayShifts.filter((s) => s.shiftType === "night"),
-  };
+export function TodayRoster({ shifts }: TodayRosterProps) {
+  const getShiftTypeColor = (type: string) => {
+    switch (type) {
+      case "morning":
+        return "bg-amber-100 text-amber-700"
+      case "afternoon":
+        return "bg-blue-100 text-blue-700"
+      case "night":
+        return "bg-purple-100 text-purple-700"
+      default:
+        return "bg-gray-100 text-gray-700"
+    }
+  }
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Today&apos;s Roster</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Today&apos;s Roster
+          </CardTitle>
           <span className="text-sm text-muted-foreground">
-            {format(today, "EEEE, d MMMM")}
+            {format(new Date(), "EEEE, d MMMM")}
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {Object.entries(shiftsByType).map(([type, shifts]) => {
-          if (shifts.length === 0) return null;
-          const config = SHIFT_CONFIG[type as keyof typeof SHIFT_CONFIG];
+      <CardContent>
+        {shifts.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No shifts scheduled for today.</p>
+        ) : (
+          <div className="space-y-4">
+            {shifts.map((shift) => {
+              const assignment = shift.shift_assignments?.[0]
+              const staff = assignment?.staff_members
+              const roleConfig = ROLE_CONFIG[shift.required_role as keyof typeof ROLE_CONFIG]
+              const shiftConfig = SHIFT_CONFIG[shift.shift_type]
 
-          return (
-            <div key={type} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">{config.label}</span>
-                <span className="text-sm text-muted-foreground">
-                  {config.startTime} - {config.endTime}
-                </span>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {shifts.map((shift) => {
-                  const roleConfig = ROLE_CONFIG[shift.roleRequired];
-                  const statusConfig = STATUS_CONFIG[shift.status];
-                  const isFilled = shift.status === "filled";
-
-                  return (
-                    <div
-                      key={shift.id}
-                      className={`flex items-center justify-between rounded-lg border p-3 ${
-                        !isFilled ? "border-orange-200 bg-orange-50" : ""
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-8 w-8 items-center justify-center rounded-full ${roleConfig.bgColor}`}
-                        >
-                          <User className={`h-4 w-4 ${roleConfig.textColor}`} />
-                        </div>
-                        <div>
+              return (
+                <div
+                  key={shift.id}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className={getShiftTypeColor(shift.shift_type)}>
+                      {shiftConfig?.label || shift.shift_type}
+                    </Badge>
+                    <div>
+                      <p className="font-medium text-sm">
+                        {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {roleConfig?.label || shift.required_role} required
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {staff ? (
+                      <>
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="text-xs">
+                            {staff.first_name[0]}
+                            {staff.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="text-right">
                           <p className="text-sm font-medium">
-                            {isFilled ? shift.assignedStaffName : "Unfilled"}
+                            {staff.first_name} {staff.last_name}
                           </p>
-                          <Badge
-                            variant="secondary"
-                            className={`${roleConfig.bgColor} ${roleConfig.textColor} text-xs`}
-                          >
-                            {roleConfig.label}
+                          <Badge variant="outline" className={`text-xs ${roleConfig?.bgColor} ${roleConfig?.textColor}`}>
+                            {staff.role}
                           </Badge>
                         </div>
-                      </div>
-                      {!isFilled && (
-                        <AlertCircle className="h-4 w-4 text-orange-500" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+                      </>
+                    ) : (
+                      <Badge variant="destructive">Unfilled</Badge>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </CardContent>
     </Card>
-  );
+  )
 }

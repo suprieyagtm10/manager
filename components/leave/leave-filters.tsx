@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Select,
@@ -6,14 +6,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { LeaveStatus, StaffRole } from "@/lib/types";
+} from "@/components/ui/select"
+import { LeaveStatus, StaffRole, ROLE_CONFIG } from "@/lib/types"
 
 interface LeaveFiltersProps {
-  statusFilter: LeaveStatus | "all";
-  setStatusFilter: (value: LeaveStatus | "all") => void;
-  roleFilter: StaffRole | "all";
-  setRoleFilter: (value: StaffRole | "all") => void;
+  statusFilter: LeaveStatus | "all"
+  setStatusFilter: (value: LeaveStatus | "all") => void
+  roleFilter: StaffRole | "all"
+  setRoleFilter: (value: StaffRole | "all") => void
 }
 
 export function LeaveFilters({
@@ -36,7 +36,6 @@ export function LeaveFilters({
           <SelectItem value="pending">Pending</SelectItem>
           <SelectItem value="approved">Approved</SelectItem>
           <SelectItem value="rejected">Rejected</SelectItem>
-          <SelectItem value="emergency">Emergency</SelectItem>
         </SelectContent>
       </Select>
 
@@ -44,16 +43,18 @@ export function LeaveFilters({
         value={roleFilter}
         onValueChange={(value) => setRoleFilter(value as StaffRole | "all")}
       >
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Roles" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Roles</SelectItem>
-          <SelectItem value="nurse">Nurses</SelectItem>
-          <SelectItem value="pca">PCAs</SelectItem>
-          <SelectItem value="kitchen">Kitchen</SelectItem>
+          {Object.entries(ROLE_CONFIG).map(([key, config]) => (
+            <SelectItem key={key} value={key}>
+              {config.label}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>
-  );
+  )
 }

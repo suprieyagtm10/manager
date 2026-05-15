@@ -1,34 +1,34 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { useEffect, useState } from "react"
+import { format, parseISO } from "date-fns"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Shift, StaffRole, ShiftType, SHIFT_CONFIG, ROLE_CONFIG } from "@/lib/types";
-import { Trash2 } from "lucide-react";
+} from "@/components/ui/select"
+import { ShiftWithAssignment, StaffRole, ShiftType, SHIFT_CONFIG, ROLE_CONFIG } from "@/lib/types"
+import { Trash2 } from "lucide-react"
 
 interface ShiftDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  shift: Shift | null;
-  date: Date | null;
-  onSave: (shift: Partial<Shift>) => void;
-  onDelete?: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  shift: ShiftWithAssignment | null
+  date: Date | null
+  onSave: (shift: Partial<ShiftWithAssignment>) => void
+  onDelete?: () => void
 }
 
 export function ShiftDialog({
@@ -40,51 +40,49 @@ export function ShiftDialog({
   onDelete,
 }: ShiftDialogProps) {
   const [formData, setFormData] = useState({
-    shiftType: "morning" as ShiftType,
-    roleRequired: "pca" as StaffRole,
+    shift_type: "morning" as ShiftType,
+    required_role: "AIN" as StaffRole,
     notes: "",
-  });
+  })
 
   useEffect(() => {
     if (shift) {
       setFormData({
-        shiftType: shift.shiftType,
-        roleRequired: shift.roleRequired,
-        notes: shift.notes,
-      });
+        shift_type: shift.shift_type as ShiftType,
+        required_role: shift.required_role as StaffRole,
+        notes: shift.notes || "",
+      })
     } else {
       setFormData({
-        shiftType: "morning",
-        roleRequired: "pca",
+        shift_type: "morning",
+        required_role: "AIN",
         notes: "",
-      });
+      })
     }
-  }, [shift, open]);
+  }, [shift, open])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const shiftConfig = SHIFT_CONFIG[formData.shiftType];
+    e.preventDefault()
+    const shiftConfig = SHIFT_CONFIG[formData.shift_type]
     onSave({
       ...formData,
-      startTime: shiftConfig.startTime,
-      endTime: shiftConfig.endTime,
-    });
-  };
+      start_time: shiftConfig.startTime,
+      end_time: shiftConfig.endTime,
+    })
+  }
 
   // Filter shift types based on selected role
-  const availableShiftTypes = Object.entries(SHIFT_CONFIG).filter(
-    ([_, config]) => config.roles.includes(formData.roleRequired)
-  );
+  const availableShiftTypes = Object.entries(SHIFT_CONFIG).filter(([key, config]) =>
+    config.roles.includes(formData.required_role)
+  )
 
-  const displayDate = shift?.date || date;
+  const displayDate = shift?.date ? parseISO(shift.date) : date
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>
-            {shift ? "Edit Shift" : "Create New Shift"}
-          </DialogTitle>
+          <DialogTitle>{shift ? "Edit Shift" : "Create New Shift"}</DialogTitle>
           {displayDate && (
             <p className="text-sm text-muted-foreground">
               {format(displayDate, "EEEE, d MMMM yyyy")}
@@ -96,16 +94,15 @@ export function ShiftDialog({
             <div className="grid gap-2">
               <Label htmlFor="role">Role Required</Label>
               <Select
-                value={formData.roleRequired}
+                value={formData.required_role}
                 onValueChange={(value: StaffRole) => {
-                  const newRole = value;
-                  // Reset shift type if it's not valid for the new role
-                  const currentShiftValid = SHIFT_CONFIG[formData.shiftType].roles.includes(newRole);
+                  const newRole = value
+                  const currentShiftValid = SHIFT_CONFIG[formData.shift_type]?.roles?.includes(newRole)
                   setFormData((prev) => ({
                     ...prev,
-                    roleRequired: newRole,
-                    shiftType: currentShiftValid ? prev.shiftType : "morning",
-                  }));
+                    required_role: newRole,
+                    shift_type: currentShiftValid ? prev.shift_type : "morning",
+                  }))
                 }}
               >
                 <SelectTrigger>
@@ -124,9 +121,9 @@ export function ShiftDialog({
             <div className="grid gap-2">
               <Label htmlFor="shiftType">Shift Type</Label>
               <Select
-                value={formData.shiftType}
+                value={formData.shift_type}
                 onValueChange={(value: ShiftType) =>
-                  setFormData((prev) => ({ ...prev, shiftType: value }))
+                  setFormData((prev) => ({ ...prev, shift_type: value }))
                 }
               >
                 <SelectTrigger>
@@ -147,9 +144,7 @@ export function ShiftDialog({
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                 placeholder="Any special requirements..."
                 rows={3}
               />
@@ -173,5 +168,5 @@ export function ShiftDialog({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

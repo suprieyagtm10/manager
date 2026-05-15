@@ -1,61 +1,74 @@
-"use client";
+"use client"
 
-import { AlertTriangle, AlertCircle, Info } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockStaff, mockShifts } from "@/lib/mock-data";
-import { validateRoster } from "@/lib/staff-matcher";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { AlertTriangle, AlertCircle, Info } from "lucide-react"
+import { formatDistanceToNow, parseISO } from "date-fns"
+import { WarningWithRelations, WARNING_SEVERITY_CONFIG } from "@/lib/types"
 
-export function RecentWarnings() {
-  const warnings = validateRoster(mockShifts, mockStaff).slice(0, 5);
+interface RecentWarningsProps {
+  warnings: WarningWithRelations[]
+}
 
-  if (warnings.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold">Roster Warnings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="rounded-full bg-green-100 p-3">
-              <Info className="h-5 w-5 text-green-600" />
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              No issues detected
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+export function RecentWarnings({ warnings }: RecentWarningsProps) {
+  const getIcon = (severity: string) => {
+    switch (severity) {
+      case "critical":
+        return <AlertCircle className="h-4 w-4 text-red-500" />
+      case "warning":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+      default:
+        return <Info className="h-4 w-4 text-blue-500" />
+    }
   }
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold">Roster Warnings</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <AlertTriangle className="h-5 w-5" />
+          Active Warnings
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {warnings.map((warning, index) => (
-          <div
-            key={index}
-            className={`flex items-start gap-3 rounded-lg p-3 ${
-              warning.severity === "error"
-                ? "bg-red-50"
-                : "bg-yellow-50"
-            }`}
-          >
-            {warning.severity === "error" ? (
-              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
-            ) : (
-              <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 shrink-0" />
-            )}
-            <p className={`text-sm ${
-              warning.severity === "error" ? "text-red-700" : "text-yellow-700"
-            }`}>
-              {warning.message}
-            </p>
+      <CardContent>
+        {warnings.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No active warnings.</p>
+        ) : (
+          <div className="space-y-3">
+            {warnings.map((warning) => {
+              const severityConfig = WARNING_SEVERITY_CONFIG[warning.severity]
+              const staff = warning.staff_members
+
+              return (
+                <div key={warning.id} className="p-3 rounded-lg border">
+                  <div className="flex items-start gap-2">
+                    {getIcon(warning.severity)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${severityConfig.bgColor} ${severityConfig.textColor}`}
+                        >
+                          {severityConfig.label}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(parseISO(warning.created_at), { addSuffix: true })}
+                        </span>
+                      </div>
+                      <p className="text-sm">{warning.message}</p>
+                      {staff && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {staff.first_name} {staff.last_name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-        ))}
+        )}
       </CardContent>
     </Card>
-  );
+  )
 }

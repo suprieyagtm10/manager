@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   format,
@@ -10,30 +10,31 @@ import {
   isSameDay,
   isSameMonth,
   isToday,
-} from "date-fns";
-import { Plus, User, MoreHorizontal, AlertCircle, UserX } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+  parseISO,
+} from "date-fns"
+import { Plus, User, MoreHorizontal, AlertCircle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Shift, StaffRole, ROLE_CONFIG, SHIFT_CONFIG } from "@/lib/types";
-import { ViewMode } from "@/app/(dashboard)/roster/page";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/dropdown-menu"
+import { ShiftWithAssignment, StaffRole, ROLE_CONFIG, SHIFT_CONFIG } from "@/lib/types"
+import { ViewMode } from "@/components/roster/roster-client"
+import { cn } from "@/lib/utils"
 
 interface RosterCalendarProps {
-  shifts: Shift[];
-  selectedDate: Date;
-  viewMode: ViewMode;
-  roleFilter: StaffRole | "all";
-  showOnlyIssues: boolean;
-  onAddShift: (date: Date) => void;
-  onEditShift: (shift: Shift) => void;
-  onAssignStaff: (shift: Shift) => void;
-  onRemoveStaff: (shiftId: string) => void;
+  shifts: ShiftWithAssignment[]
+  selectedDate: Date
+  viewMode: ViewMode
+  roleFilter: StaffRole | "all"
+  showOnlyIssues: boolean
+  onAddShift: (date: Date) => void
+  onEditShift: (shift: ShiftWithAssignment) => void
+  onAssignStaff: (shift: ShiftWithAssignment) => void
+  onRemoveStaff: (shiftId: string) => void
 }
 
 export function RosterCalendar({
@@ -50,38 +51,48 @@ export function RosterCalendar({
   const getDaysToShow = () => {
     switch (viewMode) {
       case "day":
-        return [selectedDate];
+        return [selectedDate]
       case "week":
         return eachDayOfInterval({
           start: startOfWeek(selectedDate, { weekStartsOn: 1 }),
           end: endOfWeek(selectedDate, { weekStartsOn: 1 }),
-        });
+        })
       case "month":
         return eachDayOfInterval({
           start: startOfMonth(selectedDate),
           end: endOfMonth(selectedDate),
-        });
+        })
     }
-  };
+  }
 
-  const days = getDaysToShow();
+  const days = getDaysToShow()
 
   const getShiftsForDay = (date: Date) => {
-    let dayShifts = shifts.filter((s) => isSameDay(s.date, date));
-    
+    const dateStr = format(date, "yyyy-MM-dd")
+    let dayShifts = shifts.filter((s) => s.date === dateStr)
+
     if (roleFilter !== "all") {
-      dayShifts = dayShifts.filter((s) => s.roleRequired === roleFilter);
+      dayShifts = dayShifts.filter((s) => s.required_role === roleFilter)
     }
-    
+
     if (showOnlyIssues) {
-      dayShifts = dayShifts.filter((s) => s.status === "unfilled" || s.status === "urgent");
+      dayShifts = dayShifts.filter((s) => s.status === "unfilled" || s.status === "urgent")
     }
-    
-    return dayShifts;
-  };
+
+    return dayShifts
+  }
 
   if (viewMode === "day") {
-    return <DayView day={days[0]} shifts={getShiftsForDay(days[0])} onAddShift={onAddShift} onEditShift={onEditShift} onAssignStaff={onAssignStaff} onRemoveStaff={onRemoveStaff} />;
+    return (
+      <DayView
+        day={days[0]}
+        shifts={getShiftsForDay(days[0])}
+        onAddShift={onAddShift}
+        onEditShift={onEditShift}
+        onAssignStaff={onAssignStaff}
+        onRemoveStaff={onRemoveStaff}
+      />
+    )
   }
 
   if (viewMode === "week") {
@@ -99,7 +110,7 @@ export function RosterCalendar({
           />
         ))}
       </div>
-    );
+    )
   }
 
   return (
@@ -120,7 +131,7 @@ export function RosterCalendar({
         />
       ))}
     </div>
-  );
+  )
 }
 
 function DayView({
@@ -131,19 +142,18 @@ function DayView({
   onAssignStaff,
   onRemoveStaff,
 }: {
-  day: Date;
-  shifts: Shift[];
-  onAddShift: (date: Date) => void;
-  onEditShift: (shift: Shift) => void;
-  onAssignStaff: (shift: Shift) => void;
-  onRemoveStaff: (shiftId: string) => void;
+  day: Date
+  shifts: ShiftWithAssignment[]
+  onAddShift: (date: Date) => void
+  onEditShift: (shift: ShiftWithAssignment) => void
+  onAssignStaff: (shift: ShiftWithAssignment) => void
+  onRemoveStaff: (shiftId: string) => void
 }) {
   const shiftsByType = {
-    morning: shifts.filter((s) => s.shiftType === "morning"),
-    "kitchen-afternoon": shifts.filter((s) => s.shiftType === "kitchen-afternoon"),
-    evening: shifts.filter((s) => s.shiftType === "evening"),
-    night: shifts.filter((s) => s.shiftType === "night"),
-  };
+    morning: shifts.filter((s) => s.shift_type === "morning"),
+    afternoon: shifts.filter((s) => s.shift_type === "afternoon"),
+    night: shifts.filter((s) => s.shift_type === "night"),
+  }
 
   return (
     <div className="space-y-6">
@@ -156,13 +166,13 @@ function DayView({
       </div>
 
       {Object.entries(shiftsByType).map(([type, typeShifts]) => {
-        const config = SHIFT_CONFIG[type as keyof typeof SHIFT_CONFIG];
+        const config = SHIFT_CONFIG[type as keyof typeof SHIFT_CONFIG]
         return (
           <div key={type} className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <span>{config.label}</span>
+              <span>{config?.label || type}</span>
               <span className="text-muted-foreground">
-                ({config.startTime} - {config.endTime})
+                ({config?.startTime} - {config?.endTime})
               </span>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -183,10 +193,10 @@ function DayView({
               )}
             </div>
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
 
 function DayColumn({
@@ -197,14 +207,14 @@ function DayColumn({
   onAssignStaff,
   onRemoveStaff,
 }: {
-  day: Date;
-  shifts: Shift[];
-  onAddShift: (date: Date) => void;
-  onEditShift: (shift: Shift) => void;
-  onAssignStaff: (shift: Shift) => void;
-  onRemoveStaff: (shiftId: string) => void;
+  day: Date
+  shifts: ShiftWithAssignment[]
+  onAddShift: (date: Date) => void
+  onEditShift: (shift: ShiftWithAssignment) => void
+  onAssignStaff: (shift: ShiftWithAssignment) => void
+  onRemoveStaff: (shiftId: string) => void
 }) {
-  const today = isToday(day);
+  const today = isToday(day)
 
   return (
     <div
@@ -216,12 +226,7 @@ function DayColumn({
       <div className="flex items-center justify-between mb-2">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">{format(day, "EEE")}</p>
-          <p
-            className={cn(
-              "text-lg font-semibold",
-              today && "text-blue-600"
-            )}
-          >
+          <p className={cn("text-lg font-semibold", today && "text-blue-600")}>
             {format(day, "d")}
           </p>
         </div>
@@ -242,7 +247,7 @@ function DayColumn({
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 function MonthDayCell({
@@ -252,15 +257,15 @@ function MonthDayCell({
   onAddShift,
   onEditShift,
 }: {
-  day: Date;
-  shifts: Shift[];
-  selectedDate: Date;
-  onAddShift: (date: Date) => void;
-  onEditShift: (shift: Shift) => void;
+  day: Date
+  shifts: ShiftWithAssignment[]
+  selectedDate: Date
+  onAddShift: (date: Date) => void
+  onEditShift: (shift: ShiftWithAssignment) => void
 }) {
-  const today = isToday(day);
-  const sameMonth = isSameMonth(day, selectedDate);
-  const unfilledCount = shifts.filter((s) => s.status === "unfilled" || s.status === "urgent").length;
+  const today = isToday(day)
+  const sameMonth = isSameMonth(day, selectedDate)
+  const unfilledCount = shifts.filter((s) => s.status === "unfilled" || s.status === "urgent").length
 
   return (
     <div
@@ -269,15 +274,10 @@ function MonthDayCell({
         !sameMonth && "opacity-50",
         today && "border-blue-300 bg-blue-50"
       )}
-      onClick={() => shifts.length === 0 ? onAddShift(day) : undefined}
+      onClick={() => (shifts.length === 0 ? onAddShift(day) : undefined)}
     >
       <div className="flex items-center justify-between">
-        <span
-          className={cn(
-            "text-sm",
-            today && "font-semibold text-blue-600"
-          )}
-        >
+        <span className={cn("text-sm", today && "font-semibold text-blue-600")}>
           {format(day, "d")}
         </span>
         {unfilledCount > 0 && (
@@ -288,31 +288,32 @@ function MonthDayCell({
       </div>
       <div className="mt-1 space-y-0.5">
         {shifts.slice(0, 3).map((shift) => {
-          const roleConfig = ROLE_CONFIG[shift.roleRequired];
+          const roleConfig = ROLE_CONFIG[shift.required_role as keyof typeof ROLE_CONFIG]
+          const shiftConfig = SHIFT_CONFIG[shift.shift_type]
           return (
             <div
               key={shift.id}
               className={cn(
                 "text-xs rounded px-1 py-0.5 truncate cursor-pointer",
                 shift.status === "filled"
-                  ? `${roleConfig.bgColor} ${roleConfig.textColor}`
+                  ? `${roleConfig?.bgColor} ${roleConfig?.textColor}`
                   : "bg-gray-100 text-gray-500"
               )}
               onClick={(e) => {
-                e.stopPropagation();
-                onEditShift(shift);
+                e.stopPropagation()
+                onEditShift(shift)
               }}
             >
-              {SHIFT_CONFIG[shift.shiftType].label.slice(0, 3)}
+              {shiftConfig?.label?.slice(0, 3) || shift.shift_type}
             </div>
-          );
+          )
         })}
         {shifts.length > 3 && (
           <div className="text-xs text-muted-foreground">+{shifts.length - 3} more</div>
         )}
       </div>
     </div>
-  );
+  )
 }
 
 function ShiftCard({
@@ -321,13 +322,15 @@ function ShiftCard({
   onAssign,
   onRemove,
 }: {
-  shift: Shift;
-  onEdit: (shift: Shift) => void;
-  onAssign: (shift: Shift) => void;
-  onRemove: (shiftId: string) => void;
+  shift: ShiftWithAssignment
+  onEdit: (shift: ShiftWithAssignment) => void
+  onAssign: (shift: ShiftWithAssignment) => void
+  onRemove: (shiftId: string) => void
 }) {
-  const roleConfig = ROLE_CONFIG[shift.roleRequired];
-  const isFilled = shift.status === "filled";
+  const roleConfig = ROLE_CONFIG[shift.required_role as keyof typeof ROLE_CONFIG]
+  const assignment = shift.shift_assignments?.[0]
+  const staff = assignment?.staff_members
+  const isFilled = shift.status === "filled" && staff
 
   return (
     <div
@@ -342,24 +345,24 @@ function ShiftCard({
           <div
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full",
-              isFilled ? roleConfig.bgColor : "bg-gray-100"
+              isFilled ? roleConfig?.bgColor : "bg-gray-100"
             )}
           >
             {isFilled ? (
-              <User className={cn("h-5 w-5", roleConfig.textColor)} />
+              <User className={cn("h-5 w-5", roleConfig?.textColor)} />
             ) : (
               <AlertCircle className="h-5 w-5 text-orange-500" />
             )}
           </div>
           <div>
             <p className="font-medium">
-              {isFilled ? shift.assignedStaffName : "Unfilled"}
+              {isFilled ? `${staff.first_name} ${staff.last_name}` : "Unfilled"}
             </p>
             <Badge
               variant="secondary"
-              className={`${roleConfig.bgColor} ${roleConfig.textColor} text-xs`}
+              className={`${roleConfig?.bgColor} ${roleConfig?.textColor} text-xs`}
             >
-              {roleConfig.label}
+              {roleConfig?.label || shift.required_role}
             </Badge>
           </div>
         </div>
@@ -371,33 +374,23 @@ function ShiftCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(shift)}>
-              Edit Shift
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(shift)}>Edit Shift</DropdownMenuItem>
             {!isFilled && (
-              <DropdownMenuItem onClick={() => onAssign(shift)}>
-                Assign Staff
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAssign(shift)}>Assign Staff</DropdownMenuItem>
             )}
             {isFilled && (
-              <DropdownMenuItem onClick={() => onRemove(shift.id)}>
-                Remove Staff
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onRemove(shift.id)}>Remove Staff</DropdownMenuItem>
             )}
             {isFilled && (
-              <DropdownMenuItem onClick={() => onAssign(shift)}>
-                Replace Staff
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onAssign(shift)}>Replace Staff</DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
-      {shift.notes && (
-        <p className="mt-2 text-sm text-muted-foreground">{shift.notes}</p>
-      )}
+      {shift.notes && <p className="mt-2 text-sm text-muted-foreground">{shift.notes}</p>}
     </div>
-  );
+  )
 }
 
 function MiniShiftCard({
@@ -406,21 +399,23 @@ function MiniShiftCard({
   onAssign,
   onRemove,
 }: {
-  shift: Shift;
-  onEdit: (shift: Shift) => void;
-  onAssign: (shift: Shift) => void;
-  onRemove: (shiftId: string) => void;
+  shift: ShiftWithAssignment
+  onEdit: (shift: ShiftWithAssignment) => void
+  onAssign: (shift: ShiftWithAssignment) => void
+  onRemove: (shiftId: string) => void
 }) {
-  const roleConfig = ROLE_CONFIG[shift.roleRequired];
-  const shiftConfig = SHIFT_CONFIG[shift.shiftType];
-  const isFilled = shift.status === "filled";
+  const roleConfig = ROLE_CONFIG[shift.required_role as keyof typeof ROLE_CONFIG]
+  const shiftConfig = SHIFT_CONFIG[shift.shift_type]
+  const assignment = shift.shift_assignments?.[0]
+  const staff = assignment?.staff_members
+  const isFilled = shift.status === "filled" && staff
 
   return (
     <div
       className={cn(
         "rounded p-2 text-xs cursor-pointer",
         isFilled
-          ? `${roleConfig.bgColor} ${roleConfig.textColor}`
+          ? `${roleConfig?.bgColor} ${roleConfig?.textColor}`
           : shift.status === "urgent"
           ? "bg-red-100 text-red-700"
           : "bg-gray-100 text-gray-600"
@@ -428,12 +423,12 @@ function MiniShiftCard({
       onClick={() => (isFilled ? onEdit(shift) : onAssign(shift))}
     >
       <div className="flex items-center justify-between">
-        <span className="font-medium">{shiftConfig.label}</span>
+        <span className="font-medium">{shiftConfig?.label || shift.shift_type}</span>
         {!isFilled && <AlertCircle className="h-3 w-3" />}
       </div>
       <div className="truncate">
-        {isFilled ? shift.assignedStaffName : "Unfilled"}
+        {isFilled ? `${staff.first_name} ${staff.last_name}` : "Unfilled"}
       </div>
     </div>
-  );
+  )
 }

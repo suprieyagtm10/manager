@@ -1,42 +1,38 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
-import { CalendarIcon, AlertTriangle } from "lucide-react";
+import { useEffect, useState } from "react"
+import { format, parseISO } from "date-fns"
+import { CalendarIcon, AlertTriangle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Leave, LeaveType, Staff, ROLE_CONFIG } from "@/lib/types";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/select"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { LeaveRequestWithStaff, LeaveType, StaffMember, ROLE_CONFIG } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 interface LeaveDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  leave: Leave | null;
-  staff: Staff[];
-  isEmergency: boolean;
-  onSave: (leave: Partial<Leave>) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  leave: LeaveRequestWithStaff | null
+  staff: StaffMember[]
+  isEmergency: boolean
+  onSave: (leave: Partial<LeaveRequestWithStaff>) => void
 }
 
 const leaveTypes: { value: LeaveType; label: string }[] = [
@@ -45,7 +41,7 @@ const leaveTypes: { value: LeaveType; label: string }[] = [
   { value: "personal", label: "Personal Leave" },
   { value: "unpaid", label: "Unpaid Leave" },
   { value: "emergency", label: "Emergency" },
-];
+]
 
 export function LeaveDialog({
   open,
@@ -55,45 +51,41 @@ export function LeaveDialog({
   isEmergency,
   onSave,
 }: LeaveDialogProps) {
-  const [selectedStaffId, setSelectedStaffId] = useState<string>("");
-  const [leaveType, setLeaveType] = useState<LeaveType>("annual");
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
-  const [reason, setReason] = useState("");
+  const [selectedStaffId, setSelectedStaffId] = useState<string>("")
+  const [leaveType, setLeaveType] = useState<LeaveType>("annual")
+  const [startDate, setStartDate] = useState<Date>()
+  const [endDate, setEndDate] = useState<Date>()
+  const [reason, setReason] = useState("")
 
   useEffect(() => {
     if (leave) {
-      setSelectedStaffId(leave.staffId);
-      setLeaveType(leave.leaveType);
-      setStartDate(leave.startDate);
-      setEndDate(leave.endDate);
-      setReason(leave.reason);
+      setSelectedStaffId(leave.staff_id)
+      setLeaveType(leave.leave_type as LeaveType)
+      setStartDate(parseISO(leave.start_date))
+      setEndDate(parseISO(leave.end_date))
+      setReason(leave.reason || "")
     } else {
-      setSelectedStaffId("");
-      setLeaveType(isEmergency ? "emergency" : "annual");
-      setStartDate(isEmergency ? new Date() : undefined);
-      setEndDate(undefined);
-      setReason("");
+      setSelectedStaffId("")
+      setLeaveType(isEmergency ? "emergency" : "annual")
+      setStartDate(isEmergency ? new Date() : undefined)
+      setEndDate(undefined)
+      setReason("")
     }
-  }, [leave, open, isEmergency]);
+  }, [leave, open, isEmergency])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const selectedStaff = staff.find((s) => s.id === selectedStaffId);
-    if (!selectedStaff || !startDate || !endDate) return;
+    e.preventDefault()
+    if (!selectedStaffId || !startDate || !endDate) return
 
     onSave({
-      staffId: selectedStaffId,
-      staffName: selectedStaff.name,
-      role: selectedStaff.role,
-      leaveType,
-      startDate,
-      endDate,
+      staff_id: selectedStaffId,
+      leave_type: leaveType,
+      start_date: format(startDate, "yyyy-MM-dd"),
+      end_date: format(endDate, "yyyy-MM-dd"),
       reason,
-    });
-  };
-
-  const selectedStaff = staff.find((s) => s.id === selectedStaffId);
+      status: leave?.status || (isEmergency ? "approved" : "pending"),
+    })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,7 +101,8 @@ export function LeaveDialog({
           <Alert className="border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-700">
-              Emergency leave will be immediately approved and affected shifts will be marked as unfilled.
+              Emergency leave will be immediately approved and affected shifts will be marked as
+              unfilled.
             </AlertDescription>
           </Alert>
         )}
@@ -124,17 +117,17 @@ export function LeaveDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {staff.map((member) => {
-                    const roleConfig = ROLE_CONFIG[member.role];
+                    const roleConfig = ROLE_CONFIG[member.role]
                     return (
                       <SelectItem key={member.id} value={member.id}>
                         <span className="flex items-center gap-2">
-                          {member.name}
-                          <span className={`text-xs ${roleConfig.textColor}`}>
-                            ({roleConfig.label})
+                          {member.first_name} {member.last_name}
+                          <span className={`text-xs ${roleConfig?.textColor}`}>
+                            ({roleConfig?.label || member.role})
                           </span>
                         </span>
                       </SelectItem>
-                    );
+                    )
                   })}
                 </SelectContent>
               </Select>
@@ -176,12 +169,7 @@ export function LeaveDialog({
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate}
-                      onSelect={setStartDate}
-                      initialFocus
-                    />
+                    <Calendar mode="single" selected={startDate} onSelect={setStartDate} initialFocus />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -206,7 +194,7 @@ export function LeaveDialog({
                       mode="single"
                       selected={endDate}
                       onSelect={setEndDate}
-                      disabled={(date) => startDate ? date < startDate : false}
+                      disabled={(date) => (startDate ? date < startDate : false)}
                       initialFocus
                     />
                   </PopoverContent>
@@ -241,5 +229,5 @@ export function LeaveDialog({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

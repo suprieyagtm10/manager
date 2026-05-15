@@ -1,23 +1,23 @@
-"use client";
+"use client"
 
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { StaffRole } from "@/lib/types";
+} from "@/components/ui/select"
+import { StaffRole } from "@/lib/types"
 
 interface StaffFiltersProps {
-  roleFilter: StaffRole | "all";
-  setRoleFilter: (value: StaffRole | "all") => void;
-  statusFilter: "all" | "active" | "inactive";
-  setStatusFilter: (value: "all" | "active" | "inactive") => void;
-  searchQuery: string;
-  setSearchQuery: (value: string) => void;
+  roleFilter: StaffRole | "all"
+  setRoleFilter: (value: StaffRole | "all") => void
+  statusFilter: "all" | "active" | "inactive" | "on-leave"
+  setStatusFilter: (value: "all" | "active" | "inactive" | "on-leave") => void
+  searchQuery: string
+  setSearchQuery: (value: string) => void
 }
 
 export function StaffFilters({
@@ -44,21 +44,22 @@ export function StaffFilters({
         value={roleFilter}
         onValueChange={(value) => setRoleFilter(value as StaffRole | "all")}
       >
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="All Roles" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Roles</SelectItem>
-          <SelectItem value="nurse">Nurses</SelectItem>
-          <SelectItem value="pca">PCAs</SelectItem>
-          <SelectItem value="kitchen">Kitchen</SelectItem>
+          <SelectItem value="RN">Registered Nurse</SelectItem>
+          <SelectItem value="EN">Enrolled Nurse</SelectItem>
+          <SelectItem value="AIN">Assistant in Nursing</SelectItem>
+          <SelectItem value="ADMIN">Administrator</SelectItem>
         </SelectContent>
       </Select>
 
       <Select
         value={statusFilter}
         onValueChange={(value) =>
-          setStatusFilter(value as "all" | "active" | "inactive")
+          setStatusFilter(value as "all" | "active" | "inactive" | "on-leave")
         }
       >
         <SelectTrigger className="w-[140px]">
@@ -68,8 +69,9 @@ export function StaffFilters({
           <SelectItem value="all">All Status</SelectItem>
           <SelectItem value="active">Active</SelectItem>
           <SelectItem value="inactive">Inactive</SelectItem>
+          <SelectItem value="on-leave">On Leave</SelectItem>
         </SelectContent>
       </Select>
     </div>
-  );
+  )
 }

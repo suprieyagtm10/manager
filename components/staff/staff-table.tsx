@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { MoreHorizontal, Pencil, Power, Phone, Mail } from "lucide-react";
+import { MoreHorizontal, Pencil, Power, Phone, Mail, AlertCircle } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -8,22 +8,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Staff, ROLE_CONFIG, SHIFT_CONFIG } from "@/lib/types";
+} from "@/components/ui/dropdown-menu"
+import { StaffMemberWithCertifications, ROLE_CONFIG, CERTIFICATION_STATUS_CONFIG } from "@/lib/types"
 
 interface StaffTableProps {
-  staff: Staff[];
-  onEdit: (staff: Staff) => void;
-  onToggleStatus: (staffId: string) => void;
+  staff: StaffMemberWithCertifications[]
+  onEdit: (staff: StaffMemberWithCertifications) => void
+  onToggleStatus: (staffId: string) => void
 }
 
 export function StaffTable({ staff, onEdit, onToggleStatus }: StaffTableProps) {
@@ -35,7 +35,20 @@ export function StaffTable({ staff, onEdit, onToggleStatus }: StaffTableProps) {
           Try adjusting your filters or add a new staff member
         </p>
       </div>
-    );
+    )
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "active":
+        return <Badge variant="outline" className="bg-green-100 text-green-700">Active</Badge>
+      case "inactive":
+        return <Badge variant="outline" className="bg-gray-100 text-gray-500">Inactive</Badge>
+      case "on-leave":
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-700">On Leave</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
   }
 
   return (
@@ -47,39 +60,42 @@ export function StaffTable({ staff, onEdit, onToggleStatus }: StaffTableProps) {
             <TableHead>Role</TableHead>
             <TableHead className="hidden md:table-cell">Contact</TableHead>
             <TableHead className="hidden lg:table-cell">Employment</TableHead>
-            <TableHead className="hidden lg:table-cell">Preferred Shifts</TableHead>
-            <TableHead className="hidden md:table-cell">Max Hours</TableHead>
+            <TableHead className="hidden lg:table-cell">Hours/Rate</TableHead>
+            <TableHead className="hidden xl:table-cell">Certifications</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {staff.map((member) => {
-            const roleConfig = ROLE_CONFIG[member.role];
+            const roleConfig = ROLE_CONFIG[member.role]
+            const expiringCerts = member.certifications?.filter(
+              (c) => c.status === "expiring" || c.status === "expired"
+            ) || []
+
             return (
               <TableRow key={member.id}>
                 <TableCell>
-                  <div className="font-medium">{member.name}</div>
-                  {member.notes && (
-                    <div className="text-xs text-muted-foreground truncate max-w-[200px]">
-                      {member.notes}
-                    </div>
-                  )}
+                  <div className="font-medium">
+                    {member.first_name} {member.last_name}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Badge
                     variant="secondary"
-                    className={`${roleConfig.bgColor} ${roleConfig.textColor}`}
+                    className={`${roleConfig?.bgColor} ${roleConfig?.textColor}`}
                   >
-                    {roleConfig.label}
+                    {roleConfig?.label || member.role}
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-1 text-sm">
-                      <Phone className="h-3 w-3 text-muted-foreground" />
-                      {member.phone}
-                    </div>
+                    {member.phone && (
+                      <div className="flex items-center gap-1 text-sm">
+                        <Phone className="h-3 w-3 text-muted-foreground" />
+                        {member.phone}
+                      </div>
+                    )}
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Mail className="h-3 w-3" />
                       <span className="truncate max-w-[150px]">{member.email}</span>
@@ -87,37 +103,31 @@ export function StaffTable({ staff, onEdit, onToggleStatus }: StaffTableProps) {
                   </div>
                 </TableCell>
                 <TableCell className="hidden lg:table-cell capitalize">
-                  {member.employmentType}
+                  {member.employment_type}
                 </TableCell>
                 <TableCell className="hidden lg:table-cell">
-                  <div className="flex flex-wrap gap-1">
-                    {member.preferredShifts.slice(0, 2).map((shift) => (
-                      <Badge key={shift} variant="outline" className="text-xs">
-                        {SHIFT_CONFIG[shift].label}
-                      </Badge>
-                    ))}
-                    {member.preferredShifts.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{member.preferredShifts.length - 2}
-                      </Badge>
-                    )}
-                  </div>
+                  {member.contracted_hours && (
+                    <span>{member.contracted_hours}h/week</span>
+                  )}
+                  {member.hourly_rate && (
+                    <span className="text-muted-foreground text-sm block">
+                      ${member.hourly_rate}/hr
+                    </span>
+                  )}
                 </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {member.maxWeeklyHours}h/week
+                <TableCell className="hidden xl:table-cell">
+                  {expiringCerts.length > 0 ? (
+                    <div className="flex items-center gap-1">
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-red-600">
+                        {expiringCerts.length} issue{expiringCerts.length > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-sm text-green-600">Valid</span>
+                  )}
                 </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={member.isActive ? "default" : "secondary"}
-                    className={
-                      member.isActive
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-500"
-                    }
-                  >
-                    {member.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                </TableCell>
+                <TableCell>{getStatusBadge(member.status)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -133,16 +143,16 @@ export function StaffTable({ staff, onEdit, onToggleStatus }: StaffTableProps) {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onToggleStatus(member.id)}>
                         <Power className="mr-2 h-4 w-4" />
-                        {member.isActive ? "Deactivate" : "Activate"}
+                        {member.status === "active" ? "Deactivate" : "Activate"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
-            );
+            )
           })}
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

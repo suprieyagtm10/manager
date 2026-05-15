@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { format, differenceInDays } from "date-fns";
-import { MoreHorizontal, Check, X, Calendar } from "lucide-react";
+import { format, differenceInDays, parseISO } from "date-fns"
+import { MoreHorizontal, Check, X, Calendar } from "lucide-react"
 import {
   Table,
   TableBody,
@@ -9,23 +9,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Leave, LeaveStatus, ROLE_CONFIG, LEAVE_STATUS_CONFIG } from "@/lib/types";
+} from "@/components/ui/dropdown-menu"
+import { LeaveRequestWithStaff, LeaveStatus, ROLE_CONFIG, LEAVE_STATUS_CONFIG } from "@/lib/types"
 
 interface LeaveTableProps {
-  leaves: Leave[];
-  onEdit: (leave: Leave) => void;
-  onStatusChange: (leaveId: string, status: LeaveStatus) => void;
-  onDelete: (leaveId: string) => void;
+  leaves: LeaveRequestWithStaff[]
+  onEdit: (leave: LeaveRequestWithStaff) => void
+  onStatusChange: (leaveId: string, status: LeaveStatus) => void
+  onDelete: (leaveId: string) => void
 }
 
 const leaveTypeLabels: Record<string, string> = {
@@ -34,7 +34,7 @@ const leaveTypeLabels: Record<string, string> = {
   personal: "Personal Leave",
   unpaid: "Unpaid Leave",
   emergency: "Emergency",
-};
+}
 
 export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTableProps) {
   if (leaves.length === 0) {
@@ -48,7 +48,7 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
           Leave requests will appear here when staff members request time off
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -67,34 +67,37 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
         </TableHeader>
         <TableBody>
           {leaves.map((leave) => {
-            const roleConfig = ROLE_CONFIG[leave.role];
-            const statusConfig = LEAVE_STATUS_CONFIG[leave.status];
-            const duration = differenceInDays(leave.endDate, leave.startDate) + 1;
+            const staff = leave.staff_members
+            const roleConfig = ROLE_CONFIG[staff?.role || "AIN"]
+            const statusConfig = LEAVE_STATUS_CONFIG[leave.status]
+            const startDate = parseISO(leave.start_date)
+            const endDate = parseISO(leave.end_date)
+            const duration = differenceInDays(endDate, startDate) + 1
 
             return (
               <TableRow key={leave.id}>
                 <TableCell>
                   <div>
-                    <p className="font-medium">{leave.staffName}</p>
+                    <p className="font-medium">
+                      {staff?.first_name} {staff?.last_name}
+                    </p>
                     <Badge
                       variant="secondary"
-                      className={`${roleConfig.bgColor} ${roleConfig.textColor} text-xs`}
+                      className={`${roleConfig?.bgColor} ${roleConfig?.textColor} text-xs`}
                     >
-                      {roleConfig.label}
+                      {roleConfig?.label || staff?.role}
                     </Badge>
                   </div>
                 </TableCell>
                 <TableCell>
                   <span className="text-sm">
-                    {leaveTypeLabels[leave.leaveType] || leave.leaveType}
+                    {leaveTypeLabels[leave.leave_type] || leave.leave_type}
                   </span>
                 </TableCell>
                 <TableCell>
                   <div className="text-sm">
-                    <p>{format(leave.startDate, "d MMM yyyy")}</p>
-                    <p className="text-muted-foreground">
-                      to {format(leave.endDate, "d MMM yyyy")}
-                    </p>
+                    <p>{format(startDate, "d MMM yyyy")}</p>
+                    <p className="text-muted-foreground">to {format(endDate, "d MMM yyyy")}</p>
                   </div>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
@@ -142,9 +145,7 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(leave)}>
-                          Edit Leave
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(leave)}>Edit Leave</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {leave.status !== "approved" && (
                           <DropdownMenuItem onClick={() => onStatusChange(leave.id, "approved")}>
@@ -157,10 +158,7 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => onDelete(leave.id)}
-                        >
+                        <DropdownMenuItem className="text-red-600" onClick={() => onDelete(leave.id)}>
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -168,10 +166,10 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
                   </div>
                 </TableCell>
               </TableRow>
-            );
+            )
           })}
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

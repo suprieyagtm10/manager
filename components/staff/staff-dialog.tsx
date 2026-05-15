@@ -1,90 +1,77 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Staff, StaffRole, EmploymentType, ShiftType, SHIFT_CONFIG, ROLE_CONFIG } from "@/lib/types";
+} from "@/components/ui/select"
+import { StaffMemberWithCertifications, StaffRole, EmploymentType, ROLE_CONFIG } from "@/lib/types"
 
 interface StaffDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  staff: Staff | null;
-  onSave: (staff: Partial<Staff>) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  staff: StaffMemberWithCertifications | null
+  onSave: (staff: Partial<StaffMemberWithCertifications>) => void
 }
 
 export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogProps) {
   const [formData, setFormData] = useState({
-    name: "",
-    role: "pca" as StaffRole,
+    first_name: "",
+    last_name: "",
+    role: "AIN" as StaffRole,
     phone: "",
     email: "",
-    employmentType: "casual" as EmploymentType,
-    preferredShifts: [] as ShiftType[],
-    maxWeeklyHours: 38,
-    notes: "",
-  });
+    employment_type: "casual" as EmploymentType,
+    contracted_hours: 38,
+    hourly_rate: 28.5,
+    status: "active" as "active" | "inactive" | "on-leave",
+  })
 
   useEffect(() => {
     if (staff) {
       setFormData({
-        name: staff.name,
+        first_name: staff.first_name,
+        last_name: staff.last_name,
         role: staff.role,
-        phone: staff.phone,
+        phone: staff.phone || "",
         email: staff.email,
-        employmentType: staff.employmentType,
-        preferredShifts: staff.preferredShifts,
-        maxWeeklyHours: staff.maxWeeklyHours,
-        notes: staff.notes,
-      });
+        employment_type: staff.employment_type,
+        contracted_hours: staff.contracted_hours || 38,
+        hourly_rate: staff.hourly_rate || 28.5,
+        status: staff.status,
+      })
     } else {
       setFormData({
-        name: "",
-        role: "pca",
+        first_name: "",
+        last_name: "",
+        role: "AIN",
         phone: "",
         email: "",
-        employmentType: "casual",
-        preferredShifts: [],
-        maxWeeklyHours: 38,
-        notes: "",
-      });
+        employment_type: "casual",
+        contracted_hours: 38,
+        hourly_rate: 28.5,
+        status: "active",
+      })
     }
-  }, [staff, open]);
+  }, [staff, open])
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  const toggleShift = (shift: ShiftType) => {
-    setFormData((prev) => ({
-      ...prev,
-      preferredShifts: prev.preferredShifts.includes(shift)
-        ? prev.preferredShifts.filter((s) => s !== shift)
-        : [...prev.preferredShifts, shift],
-    }));
-  };
-
-  // Get available shifts based on role
-  const availableShifts = Object.entries(SHIFT_CONFIG).filter(
-    ([_, config]) => config.roles.includes(formData.role)
-  );
+    e.preventDefault()
+    onSave(formData)
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,17 +83,31 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="Enter full name"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="first_name">First Name</Label>
+                <Input
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, first_name: e.target.value }))
+                  }
+                  placeholder="First name"
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="last_name">Last Name</Label>
+                <Input
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, last_name: e.target.value }))
+                  }
+                  placeholder="Last name"
+                  required
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -115,7 +116,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
                 <Select
                   value={formData.role}
                   onValueChange={(value: StaffRole) =>
-                    setFormData((prev) => ({ ...prev, role: value, preferredShifts: [] }))
+                    setFormData((prev) => ({ ...prev, role: value }))
                   }
                 >
                   <SelectTrigger>
@@ -134,9 +135,9 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
               <div className="grid gap-2">
                 <Label htmlFor="employment">Employment Type</Label>
                 <Select
-                  value={formData.employmentType}
+                  value={formData.employment_type}
                   onValueChange={(value: EmploymentType) =>
-                    setFormData((prev) => ({ ...prev, employmentType: value }))
+                    setFormData((prev) => ({ ...prev, employment_type: value }))
                   }
                 >
                   <SelectTrigger>
@@ -174,57 +175,67 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
                     setFormData((prev) => ({ ...prev, email: e.target.value }))
                   }
                   placeholder="email@example.com"
+                  required
                 />
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="maxHours">Maximum Weekly Hours</Label>
-              <Input
-                id="maxHours"
-                type="number"
-                min={1}
-                max={60}
-                value={formData.maxWeeklyHours}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    maxWeeklyHours: parseInt(e.target.value) || 38,
-                  }))
-                }
-              />
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="contracted_hours">Contracted Hours/Week</Label>
+                <Input
+                  id="contracted_hours"
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={formData.contracted_hours}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      contracted_hours: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                />
+              </div>
 
-            <div className="grid gap-2">
-              <Label>Preferred Shifts</Label>
-              <div className="flex flex-wrap gap-4">
-                {availableShifts.map(([key, config]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`shift-${key}`}
-                      checked={formData.preferredShifts.includes(key as ShiftType)}
-                      onCheckedChange={() => toggleShift(key as ShiftType)}
-                    />
-                    <Label htmlFor={`shift-${key}`} className="text-sm font-normal">
-                      {config.label}
-                    </Label>
-                  </div>
-                ))}
+              <div className="grid gap-2">
+                <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+                <Input
+                  id="hourly_rate"
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={formData.hourly_rate}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      hourly_rate: parseFloat(e.target.value) || 0,
+                    }))
+                  }
+                />
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
-                }
-                placeholder="Any additional notes..."
-                rows={3}
-              />
-            </div>
+            {staff && (
+              <div className="grid gap-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: "active" | "inactive" | "on-leave") =>
+                    setFormData((prev) => ({ ...prev, status: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="on-leave">On Leave</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
@@ -236,5 +247,5 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

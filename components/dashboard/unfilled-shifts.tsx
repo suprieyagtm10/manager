@@ -1,109 +1,102 @@
-"use client";
+"use client"
 
-import { format, isSameDay, isBefore } from "date-fns";
-import { AlertTriangle, Calendar, ArrowRight } from "lucide-react";
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { getUnfilledShifts } from "@/lib/mock-data";
-import { ROLE_CONFIG, SHIFT_CONFIG } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { AlertCircle, UserPlus } from "lucide-react"
+import { format, parseISO } from "date-fns"
+import Link from "next/link"
+import { ShiftWithAssignment, ROLE_CONFIG, SHIFT_CONFIG } from "@/lib/types"
 
-export function UnfilledShifts() {
-  const today = new Date();
-  const unfilledShifts = getUnfilledShifts()
-    .filter((s) => !isBefore(s.date, today))
-    .slice(0, 5);
+interface UnfilledShiftsProps {
+  shifts: ShiftWithAssignment[]
+}
 
-  if (unfilledShifts.length === 0) {
-    return (
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold">Unfilled Shifts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="rounded-full bg-green-100 p-3">
-              <Calendar className="h-6 w-6 text-green-600" />
-            </div>
-            <p className="mt-4 font-medium">All shifts are filled</p>
-            <p className="text-sm text-muted-foreground">
-              Great job! No coverage needed.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+export function UnfilledShifts({ shifts }: UnfilledShiftsProps) {
+  const sortedShifts = [...shifts].sort((a, b) => {
+    const dateCompare = a.date.localeCompare(b.date)
+    if (dateCompare !== 0) return dateCompare
+    return a.start_time.localeCompare(b.start_time)
+  }).slice(0, 5)
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Unfilled Shifts</CardTitle>
-          <Badge variant="destructive" className="gap-1">
-            <AlertTriangle className="h-3 w-3" />
-            {unfilledShifts.length} unfilled
-          </Badge>
-        </div>
+        <CardTitle className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-red-500" />
+          Unfilled Shifts
+          {shifts.length > 0 && (
+            <Badge variant="destructive" className="ml-2">
+              {shifts.length}
+            </Badge>
+          )}
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {unfilledShifts.map((shift) => {
-          const roleConfig = ROLE_CONFIG[shift.roleRequired];
-          const shiftConfig = SHIFT_CONFIG[shift.shiftType];
-          const isToday = isSameDay(shift.date, today);
+      <CardContent>
+        {sortedShifts.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-muted-foreground text-sm">All shifts are covered!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sortedShifts.map((shift) => {
+              const roleConfig = ROLE_CONFIG[shift.required_role as keyof typeof ROLE_CONFIG]
+              const shiftConfig = SHIFT_CONFIG[shift.shift_type]
+              const isToday = shift.date === format(new Date(), "yyyy-MM-dd")
+              const isTomorrow = shift.date === format(new Date(Date.now() + 86400000), "yyyy-MM-dd")
 
-          return (
-            <div
-              key={shift.id}
-              className={`flex items-center justify-between rounded-lg border p-3 ${
-                shift.status === "urgent"
-                  ? "border-red-200 bg-red-50"
-                  : "border-orange-200 bg-orange-50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="text-center">
-                  <p className="text-xs text-muted-foreground">
-                    {isToday ? "Today" : format(shift.date, "EEE")}
-                  </p>
-                  <p className="text-lg font-semibold">
-                    {format(shift.date, "d")}
-                  </p>
+              let dateLabel = format(parseISO(shift.date), "EEE, MMM d")
+              if (isToday) dateLabel = "Today"
+              if (isTomorrow) dateLabel = "Tomorrow"
+
+              return (
+                <div
+                  key={shift.id}
+                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                    isToday ? "border-red-200 bg-red-50" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{dateLabel}</p>
+                        {isToday && (
+                          <Badge variant="destructive" className="text-xs">
+                            Urgent
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {shiftConfig?.label} ({shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)})
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className={`${roleConfig?.bgColor} ${roleConfig?.textColor}`}>
+                      {roleConfig?.label || shift.required_role}
+                    </Badge>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/roster?date=${shift.date}&shift=${shift.id}`}>
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Assign
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">
-                    {shiftConfig.label} - {roleConfig.label}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {shiftConfig.startTime} - {shiftConfig.endTime}
-                  </p>
-                </div>
+              )
+            })}
+            {shifts.length > 5 && (
+              <div className="text-center pt-2">
+                <Button variant="link" asChild>
+                  <Link href="/roster?status=unfilled">
+                    View all {shifts.length} unfilled shifts
+                  </Link>
+                </Button>
               </div>
-              <div className="flex items-center gap-2">
-                {shift.status === "urgent" && (
-                  <Badge variant="destructive" className="text-xs">
-                    Urgent
-                  </Badge>
-                )}
-                <Link href={`/roster?date=${format(shift.date, "yyyy-MM-dd")}`}>
-                  <Button variant="ghost" size="sm">
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-        
-        {unfilledShifts.length > 0 && (
-          <Link href="/roster">
-            <Button variant="outline" className="w-full mt-2">
-              View All Shifts
-            </Button>
-          </Link>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
