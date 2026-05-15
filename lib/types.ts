@@ -5,7 +5,7 @@ export type EmploymentType = "full-time" | "part-time" | "casual"
 export type ShiftType = "morning" | "afternoon" | "night"
 export type ShiftStatus = "unfilled" | "filled" | "partial"
 export type AssignmentStatus = "assigned" | "confirmed" | "completed" | "cancelled" | "no-show"
-export type LeaveType = "annual" | "sick" | "personal" | "unpaid" | "other"
+export type LeaveType = "annual" | "sick" | "personal" | "unpaid" | "other" | "emergency"
 export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled"
 export type CertificationStatus = "valid" | "expiring" | "expired"
 export type WarningType = "overtime" | "certification" | "understaffed" | "compliance" | "no-break"
@@ -126,11 +126,13 @@ export interface StaffMemberWithCertifications extends StaffMember {
 }
 
 export interface LeaveRequestWithStaff extends LeaveRequest {
-  staff_members: StaffMember
+  staff?: StaffMember | null
+  approver?: StaffMember | null
 }
 
 export interface WarningWithRelations extends Warning {
   staff_members?: StaffMember | null
+  resolver?: StaffMember | null
   shifts?: Shift | null
 }
 
@@ -146,21 +148,32 @@ export interface StaffSuggestion {
 }
 
 // Configuration
-export const SHIFT_CONFIG: Record<ShiftType, { label: string; startTime: string; endTime: string }> = {
+export const SHIFT_CONFIG: Record<
+  ShiftType,
+  {
+    label: string
+    startTime: string
+    endTime: string
+    roles: StaffRole[]
+  }
+> = {
   morning: {
     label: "Morning",
     startTime: "06:00",
     endTime: "14:00",
+    roles: ["RN", "EN", "AIN"],
   },
   afternoon: {
     label: "Afternoon",
     startTime: "14:00",
     endTime: "22:00",
+    roles: ["RN", "EN", "AIN"],
   },
   night: {
     label: "Night",
     startTime: "22:00",
     endTime: "06:00",
+    roles: ["RN", "EN"],
   },
 }
 

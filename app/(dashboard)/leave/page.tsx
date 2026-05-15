@@ -1,10 +1,10 @@
 import { AppHeader } from "@/components/app-header"
 import { LeaveClient } from "@/components/leave/leave-client"
-import { getLeaveRequestsWithStaff, getActiveStaffMembers } from "@/lib/db"
+import { getLeaveRequests, getActiveStaffMembers } from "@/lib/db"
 
 export default async function LeavePage() {
   const [leaves, staff] = await Promise.all([
-    getLeaveRequestsWithStaff(),
+    getLeaveRequests(),
     getActiveStaffMembers(),
   ])
 

@@ -31,6 +31,7 @@ export function UpcomingLeave({ leaves }: UpcomingLeaveProps) {
           <div className="space-y-3">
             {upcomingLeaves.map((leave) => {
               const staff = leave.staff_members
+              if (!staff) return null
               const roleConfig = ROLE_CONFIG[staff.role]
               const statusConfig = LEAVE_STATUS_CONFIG[leave.status]
               const startDate = parseISO(leave.start_date)

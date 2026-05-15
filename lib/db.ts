@@ -38,6 +38,20 @@ export async function getStaffMembers(): Promise<StaffMember[]> {
   return data || []
 }
 
+export async function getActiveStaffMembers(): Promise<StaffMember[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("staff_members")
+    .select("*")
+    .eq("status", "active")
+    .order("last_name")
+
+  if (error) throw error
+
+  return data || []
+}
+
 export async function getStaffMembersWithCertifications(): Promise<StaffMemberWithCertifications[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -366,7 +380,8 @@ export async function getWarnings(resolved?: boolean): Promise<WarningWithRelati
     .from("warnings")
     .select(`
       *,
-      staff_members (*),
+      staff:staff_members!warnings_staff_id_fkey (*),
+      resolver:staff_members!warnings_resolved_by_fkey (*),
       shifts (*)
     `)
     .order("created_at", { ascending: false })
