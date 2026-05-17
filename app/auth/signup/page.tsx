@@ -59,7 +59,7 @@ export default function SignUpPage() {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md w-full">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <CheckCircle className="h-12 w-12 text-green-500" />
@@ -86,7 +86,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md w-full">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Heart className="h-8 w-8 text-primary" />

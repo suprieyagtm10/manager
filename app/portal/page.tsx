@@ -72,7 +72,7 @@ export default function EmployeePortalPage() {
   if (step === "success") {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md text-center">
+        <Card className="w-full max-w-md w-full text-center">
           <CardContent className="pt-10 pb-10">
             <div className="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
               <Check className="h-8 w-8 text-green-600" />

@@ -32,13 +32,13 @@ const rules = [
 
 export default function RulesPage() {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-screen flex-col">
       <AppHeader
         title="Roster Rules"
         subtitle="View rostering rules and compliance checks"
       />
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
         <div className="grid gap-4 md:grid-cols-2">
           {rules.map((rule) => (
             <Card key={rule.name}>

@@ -27,7 +27,7 @@ export function AvailabilityDialog({ open, onOpenChange, availability }: Availab
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Availability Details</DialogTitle>
         </DialogHeader>

@@ -241,7 +241,7 @@ export function RosterClient({ initialShifts, staff }: RosterClientProps) {
         setShowOnlyIssues={setShowOnlyIssues}
       />
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
         <RosterCalendar
           shifts={shifts}
           selectedDate={selectedDate}

@@ -28,12 +28,12 @@ export default async function DashboardPage() {
   const activeWarnings = warningsData.slice(0, 5)
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-screen flex-col">
       <AppHeader
         title="Dashboard"
         subtitle="Overview of today's roster and key actions"
       />
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
         <div className="space-y-6">
           <DashboardStats stats={stats} />
 

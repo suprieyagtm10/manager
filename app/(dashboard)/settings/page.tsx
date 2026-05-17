@@ -18,12 +18,12 @@ const requiredTables = [
 
 export default function SettingsPage() {
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-screen flex-col">
       <AppHeader
         title="Settings"
         subtitle="Database, authentication and application setup"
       />
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
         <div className="space-y-6 max-w-3xl">
           <Card>
             <CardHeader>

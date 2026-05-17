@@ -29,14 +29,14 @@ export function StaffFilters({
   setSearchQuery,
 }: StaffFiltersProps) {
   return (
-    <div className="flex flex-wrap gap-3">
-      <div className="relative">
+    <div className="grid w-full gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap">
+      <div className="relative min-w-0">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder="Search staff..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-64 pl-9"
+          className="h-11 w-full rounded-xl pl-9 lg:w-64"
         />
       </div>
 
@@ -44,7 +44,7 @@ export function StaffFilters({
         value={roleFilter}
         onValueChange={(value) => setRoleFilter(value as StaffRole | "all")}
       >
-        <SelectTrigger className="w-[180px]">
+        <SelectTrigger className="h-11 w-full rounded-xl lg:w-[180px]">
           <SelectValue placeholder="All Roles" />
         </SelectTrigger>
         <SelectContent>
@@ -64,7 +64,7 @@ export function StaffFilters({
           setStatusFilter(value as "all" | "active" | "inactive" | "on-leave")
         }
       >
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="h-11 w-full rounded-xl lg:w-[150px]">
           <SelectValue placeholder="All Status" />
         </SelectTrigger>
         <SelectContent>

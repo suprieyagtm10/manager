@@ -93,10 +93,10 @@ export default async function ReportsPage() {
       : 0
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-screen flex-col">
       <AppHeader title="Reports" subtitle="View roster summaries and staff statistics" />
 
-      <div className="flex-1 overflow-auto p-6 space-y-6">
+      <div className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="p-6 flex items-center gap-4">

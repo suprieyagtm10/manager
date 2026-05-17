@@ -101,7 +101,7 @@ export function WorkingHoursClient({ staff, initialEntries }: WorkingHoursClient
 
   return (
     <div className="space-y-6 animate-in fade-in-0 slide-in-from-bottom-3 duration-500">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {totalsByStaff.slice(0, 6).map(({ member, total }) => {
           const role = ROLE_CONFIG[member.role]
           return (
@@ -124,7 +124,7 @@ export function WorkingHoursClient({ staff, initialEntries }: WorkingHoursClient
         })}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(320px,380px)_1fr]">
         <Card className="interactive-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><CalendarClock className="h-5 w-5" /> Record working hours</CardTitle>
@@ -145,7 +145,7 @@ export function WorkingHoursClient({ staff, initialEntries }: WorkingHoursClient
               <Label>Date</Label>
               <Input type="date" value={form.work_date} onChange={(e) => setForm((prev) => ({ ...prev, work_date: e.target.value }))} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Start</Label>
                 <Input type="time" value={form.start_time} onChange={(e) => setForm((prev) => ({ ...prev, start_time: e.target.value }))} />
@@ -167,7 +167,7 @@ export function WorkingHoursClient({ staff, initialEntries }: WorkingHoursClient
               <p className="text-sm">Calculated payable hours</p>
               <p className="text-3xl font-bold">{previewHours.toFixed(1)}h</p>
             </div>
-            <Button onClick={handleSave} className="w-full gap-2 rounded-xl transition-transform hover:-translate-y-0.5">
+            <Button onClick={handleSave} className="min-h-12 w-full gap-2 rounded-xl text-base transition-transform hover:-translate-y-0.5 active:scale-[0.99]">
               <Save className="h-4 w-4" /> Save hours
             </Button>
           </CardContent>
@@ -178,8 +178,8 @@ export function WorkingHoursClient({ staff, initialEntries }: WorkingHoursClient
             <CardTitle>Recent hour records</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-xl border overflow-hidden">
-              <Table>
+            <div className="responsive-table-card safe-scroll-x">
+              <Table className="min-w-[680px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Staff</TableHead>
@@ -203,7 +203,7 @@ export function WorkingHoursClient({ staff, initialEntries }: WorkingHoursClient
                         <TableCell>{entry.break_minutes}m</TableCell>
                         <TableCell><Badge>{Number(entry.total_hours).toFixed(1)}h</Badge></TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)} className="hover:text-destructive">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(entry.id)} className="h-10 w-10 rounded-xl hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -213,7 +213,7 @@ export function WorkingHoursClient({ staff, initialEntries }: WorkingHoursClient
                 </TableBody>
               </Table>
             </div>
-            <Button variant="outline" className="mt-4 gap-2 rounded-xl">
+            <Button variant="outline" className="mt-4 min-h-11 gap-2 rounded-xl">
               <Plus className="h-4 w-4" /> Export-ready records can be added next
             </Button>
           </CardContent>

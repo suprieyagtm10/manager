@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Bell, Search, User } from "lucide-react";
+import { MobileSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,15 +34,18 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card/90 px-4 shadow-sm backdrop-blur md:px-6">
-      <div className="flex flex-col">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">{title}</h1>
+    <header className="sticky top-0 z-40 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-card/95 px-3 shadow-sm backdrop-blur md:px-6">
+      <div className="flex min-w-0 items-center gap-2">
+        <MobileSidebar />
+        <div className="flex min-w-0 flex-col">
+        <h1 className="truncate text-lg font-semibold tracking-tight text-foreground sm:text-xl">{title}</h1>
         {subtitle && (
-          <p className="text-sm text-muted-foreground">{subtitle}</p>
+          <p className="truncate text-sm text-muted-foreground">{subtitle}</p>
         )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-4">
         <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
           <span>{format(today, "EEEE, d MMMM yyyy")}</span>
         </div>
@@ -56,7 +60,7 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative transition-transform hover:-translate-y-0.5">
+            <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-2xl transition-transform hover:-translate-y-0.5 active:scale-95">
               <Bell className="h-5 w-5" />
               <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs">
                 3
@@ -89,8 +93,8 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
+            <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl active:scale-95">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
                 <User className="h-4 w-4" />
               </div>
             </Button>

@@ -75,7 +75,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
             {staff ? "Edit Staff Member" : "Add New Staff Member"}
@@ -83,7 +83,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="first_name">First Name</Label>
                 <Input
@@ -110,7 +110,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="role">Role</Label>
                 <Select
@@ -152,7 +152,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
@@ -180,7 +180,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="grid gap-2">
                 <Label htmlFor="contracted_hours">Contracted Hours/Week</Label>
                 <Input
@@ -238,11 +238,11 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
             )}
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2 sm:gap-3">
+            <Button type="button" variant="outline" className="min-h-11 rounded-xl" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">{staff ? "Save Changes" : "Add Staff"}</Button>
+            <Button type="submit" className="min-h-11 rounded-xl">{staff ? "Save Changes" : "Add Staff"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

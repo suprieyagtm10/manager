@@ -97,7 +97,7 @@ export function RosterCalendar({
 
   if (viewMode === "week") {
     return (
-      <div className="grid grid-cols-7 gap-2">
+      <div className="safe-scroll-x pb-2"><div className="grid min-w-[920px] grid-cols-7 gap-2">
         {days.map((day) => (
           <DayColumn
             key={day.toISOString()}
@@ -109,12 +109,12 @@ export function RosterCalendar({
             onRemoveStaff={onRemoveStaff}
           />
         ))}
-      </div>
+      </div></div>
     )
   }
 
   return (
-    <div className="grid grid-cols-7 gap-1">
+    <div className="safe-scroll-x pb-2"><div className="grid min-w-[920px] grid-cols-7 gap-1">
       {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
         <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
           {day}
@@ -130,7 +130,7 @@ export function RosterCalendar({
           onEditShift={onEditShift}
         />
       ))}
-    </div>
+    </div></div>
   )
 }
 
@@ -158,9 +158,9 @@ function DayView({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">{format(day, "EEEE, d MMMM yyyy")}</h2>
-        <Button onClick={() => onAddShift(day)} className="gap-2">
+        <Button onClick={() => onAddShift(day)} className="min-h-11 gap-2 rounded-xl">
           <Plus className="h-4 w-4" />
           Add Shift
         </Button>
@@ -231,7 +231,7 @@ function DayColumn({
             {format(day, "d")}
           </p>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => onAddShift(day)}>
+        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl" onClick={() => onAddShift(day)}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>

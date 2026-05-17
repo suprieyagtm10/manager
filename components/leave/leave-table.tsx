@@ -39,7 +39,7 @@ const leaveTypeLabels: Record<string, string> = {
 export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTableProps) {
   if (leaves.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">
+      <div className="responsive-table-card flex flex-col items-center justify-center px-4 py-12 text-center">
         <div className="rounded-full bg-muted p-3">
           <Calendar className="h-6 w-6 text-muted-foreground" />
         </div>
@@ -52,8 +52,8 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
   }
 
   return (
-    <div className="rounded-lg border">
-      <Table>
+    <div className="responsive-table-card safe-scroll-x">
+      <Table className="min-w-[760px]">
         <TableHeader>
           <TableRow>
             <TableHead>Staff Member</TableHead>
@@ -123,7 +123,7 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          className="h-10 w-10 rounded-xl text-green-600 hover:text-green-700 hover:bg-green-50"
                           onClick={() => onStatusChange(leave.id, "approved")}
                         >
                           <Check className="h-4 w-4" />
@@ -131,7 +131,7 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-10 w-10 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50"
                           onClick={() => onStatusChange(leave.id, "rejected")}
                         >
                           <X className="h-4 w-4" />
@@ -140,7 +140,7 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
                     )}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>

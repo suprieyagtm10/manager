@@ -159,10 +159,10 @@ export function ShiftDialog({
               </Button>
             )}
             <div className="flex gap-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" className="min-h-11 rounded-xl" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">{shift ? "Save Changes" : "Create Shift"}</Button>
+              <Button type="submit" className="min-h-11 rounded-xl">{shift ? "Save Changes" : "Create Shift"}</Button>
             </div>
           </DialogFooter>
         </form>

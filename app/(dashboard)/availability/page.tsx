@@ -26,12 +26,12 @@ export default function AvailabilityPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-screen flex-col">
       <AppHeader
         title="Availability Portal"
         subtitle="View and manage staff availability submissions"
       />
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-x-hidden p-3 sm:p-4 md:p-6">
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-3">
             <Card>

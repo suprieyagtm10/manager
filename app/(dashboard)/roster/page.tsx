@@ -11,7 +11,7 @@ export default async function RosterPage() {
   ])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex min-h-screen flex-col">
       <AppHeader
         title="Roster Calendar"
         subtitle="View and manage staff schedules"

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { StaffTable } from "@/components/staff/staff-table"
 import { StaffDialog } from "@/components/staff/staff-dialog"
 import { StaffFilters } from "@/components/staff/staff-filters"
@@ -17,11 +17,13 @@ interface StaffClientProps {
 
 export function StaffClient({ initialStaff }: StaffClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
   const [staff, setStaff] = useState<StaffMemberWithCertifications[]>(initialStaff)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingStaff, setEditingStaff] = useState<StaffMemberWithCertifications | null>(null)
-  const [roleFilter, setRoleFilter] = useState<StaffRole | "all">("all")
+  const initialRole = (searchParams.get("role") as StaffRole | null)
+  const [roleFilter, setRoleFilter] = useState<StaffRole | "all">(initialRole || "all")
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "on-leave">("all")
   const [searchQuery, setSearchQuery] = useState("")
 
@@ -128,7 +130,7 @@ export function StaffClient({ initialStaff }: StaffClientProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="page-section">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <StaffFilters
           roleFilter={roleFilter}
@@ -138,7 +140,7 @@ export function StaffClient({ initialStaff }: StaffClientProps) {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
-        <Button onClick={handleAddStaff} className="gap-2">
+        <Button onClick={handleAddStaff} className="touch-button gap-2">
           <UserPlus className="h-4 w-4" />
           Add Staff
         </Button>
