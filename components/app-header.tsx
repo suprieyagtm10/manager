@@ -1,6 +1,8 @@
 "use client";
 
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { Bell, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,14 @@ interface AppHeaderProps {
 
 export function AppHeader({ title, subtitle }: AppHeaderProps) {
   const today = new Date();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+    router.refresh();
+  };
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
@@ -91,7 +101,7 @@ export function AppHeader({ title, subtitle }: AppHeaderProps) {
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

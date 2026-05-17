@@ -4,7 +4,7 @@ import Link from "next/link";
 import {
   UserPlus,
   CalendarPlus,
-  RefreshCcw,
+  Database,
   Send,
   Search,
   AlertCircle,
@@ -38,8 +38,8 @@ const actions = [
     color: "text-red-600",
   },
   {
-    label: "Sync Sheets",
-    icon: RefreshCcw,
+    label: "App Settings",
+    icon: Database,
     href: "/settings",
     color: "text-purple-600",
   },

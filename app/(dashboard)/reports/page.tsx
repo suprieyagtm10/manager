@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { AppHeader } from "@/components/app-header"
 import { getActiveStaffMembers, getShiftsWithAssignments, getLeaveRequests } from "@/lib/db"
 import { ROLE_CONFIG, SHIFT_CONFIG, StaffRole } from "@/lib/types"

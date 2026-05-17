@@ -65,7 +65,7 @@ export default function EmployeePortalPage() {
   const unavailableCount = Object.values(dateSelections).filter((v) => v === "unavailable").length;
 
   const handleSubmit = () => {
-    // In production, this would submit to the API/Google Sheets
+    // Availability submissions can be connected to the Supabase database/API when needed.
     setStep("success");
   };
 

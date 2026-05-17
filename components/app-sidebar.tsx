@@ -10,7 +10,6 @@ import {
   Clock,
   FileText,
   Settings,
-  RefreshCcw,
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -123,12 +122,6 @@ export function AppSidebar() {
         </nav>
       </ScrollArea>
 
-      <div className="border-t border-border p-4">
-        <Button variant="outline" className="w-full gap-2" size="sm">
-          <RefreshCcw className="h-4 w-4" />
-          Sync with Sheets
-        </Button>
-      </div>
     </div>
   );
 }

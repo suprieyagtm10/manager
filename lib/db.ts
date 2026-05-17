@@ -251,7 +251,7 @@ export async function getLeaveRequests(): Promise<LeaveRequestWithStaff[]> {
     .from("leave_requests")
 .select(`
   *,
-  staff:staff_members!leave_requests_staff_id_fkey (*),
+  staff_members:staff_members!leave_requests_staff_id_fkey (*),
   approver:staff_members!leave_requests_approved_by_fkey (*)
 `)
     .order("start_date", { ascending: false })
@@ -380,7 +380,7 @@ export async function getWarnings(resolved?: boolean): Promise<WarningWithRelati
     .from("warnings")
     .select(`
       *,
-      staff:staff_members!warnings_staff_id_fkey (*),
+      staff_members:staff_members!warnings_staff_id_fkey (*),
       resolver:staff_members!warnings_resolved_by_fkey (*),
       shifts (*)
     `)

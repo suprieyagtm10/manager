@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { AppHeader } from "@/components/app-header"
 import { StaffClient } from "@/components/staff/staff-client"
 import { getStaffMembersWithCertifications } from "@/lib/db"

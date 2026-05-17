@@ -3,7 +3,7 @@
 export type StaffRole = "RN" | "EN" | "AIN" | "ADMIN"
 export type EmploymentType = "full-time" | "part-time" | "casual"
 export type ShiftType = "morning" | "afternoon" | "night"
-export type ShiftStatus = "unfilled" | "filled" | "partial"
+export type ShiftStatus = "unfilled" | "filled" | "partial" | "urgent"
 export type AssignmentStatus = "assigned" | "confirmed" | "completed" | "cancelled" | "no-show"
 export type LeaveType = "annual" | "sick" | "personal" | "unpaid" | "other" | "emergency"
 export type LeaveStatus = "pending" | "approved" | "rejected" | "cancelled"
@@ -21,6 +21,9 @@ export interface Facility {
   created_at: string
   updated_at: string
 }
+
+export type Staff = StaffMember
+export type Leave = LeaveRequest
 
 export interface StaffMember {
   id: string
@@ -51,6 +54,10 @@ export interface Certification {
 }
 
 export interface Shift {
+  // Legacy client-side fields kept optional for older helper code
+  assignedStaffId?: string | null
+  shiftType?: ShiftType
+  roleRequired?: StaffRole | "ANY"
   id: string
   facility_id: string | null
   date: string
@@ -76,6 +83,10 @@ export interface ShiftAssignment {
 }
 
 export interface LeaveRequest {
+  // Legacy client-side fields kept optional for older helper code
+  staffId?: string
+  startDate?: Date
+  endDate?: Date
   id: string
   staff_id: string
   leave_type: LeaveType
@@ -90,6 +101,16 @@ export interface LeaveRequest {
 }
 
 export interface Availability {
+  // Optional display fields used by the demo availability portal
+  staffName?: string
+  role?: StaffRole
+  startDate?: Date
+  endDate?: Date
+  preferredShifts?: ShiftType[]
+  availableDates?: Date[]
+  unavailableDates?: Date[]
+  notes?: string | null
+  submittedAt?: Date
   id: string
   staff_id: string
   day_of_week: number
@@ -126,6 +147,7 @@ export interface StaffMemberWithCertifications extends StaffMember {
 }
 
 export interface LeaveRequestWithStaff extends LeaveRequest {
+  staff_members?: StaffMember | null
   staff?: StaffMember | null
   approver?: StaffMember | null
 }
@@ -204,6 +226,7 @@ export const STATUS_CONFIG: Record<ShiftStatus, { label: string; bgColor: string
   filled: { label: "Filled", bgColor: "bg-green-100", textColor: "text-green-700" },
   unfilled: { label: "Unfilled", bgColor: "bg-red-100", textColor: "text-red-700" },
   partial: { label: "Partial", bgColor: "bg-yellow-100", textColor: "text-yellow-700" },
+  urgent: { label: "Urgent", bgColor: "bg-orange-100", textColor: "text-orange-700" },
 }
 
 export const LEAVE_STATUS_CONFIG: Record<LeaveStatus, { label: string; bgColor: string; textColor: string }> = {

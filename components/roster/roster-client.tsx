@@ -153,6 +153,8 @@ export function RosterClient({ initialShifts, staff }: RosterClientProps) {
                     shift_id: selectedShift.id,
                     staff_id: staffId,
                     status: "assigned",
+                    assigned_at: new Date().toISOString(),
+                    confirmed_at: null,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                     staff_members: staffMember!,

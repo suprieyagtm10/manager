@@ -16,13 +16,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -38,24 +37,7 @@ export default function LoginPage() {
     router.refresh()
   }
 
-  const handleDemoLogin = async () => {
-    setError(null)
-    setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: "demo@sunrisecare.com.au",
-      password: "demo123456",
-    })
-
-    if (error) {
-      setError("Demo account not available. Please sign up first.")
-      setLoading(false)
-      return
-    }
-
-    router.push("/dashboard")
-    router.refresh()
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
@@ -116,28 +98,6 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Or
-                </span>
-              </div>
-            </div>
-
-            <Button
-              variant="outline"
-              className="w-full mt-4"
-              onClick={handleDemoLogin}
-              disabled={loading}
-            >
-              Try Demo Account
-            </Button>
-          </div>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { AppHeader } from "@/components/app-header"
 import { RosterClient } from "@/components/roster/roster-client"
 import { getShiftsWithAssignments, getActiveStaffMembers } from "@/lib/db"

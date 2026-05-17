@@ -1,281 +1,304 @@
-import { Staff, Shift, Leave, Availability, StaffSuggestion, SuggestionRank, SHIFT_CONFIG } from "./types";
-import { mockShifts, mockLeave, mockAvailability } from "./mock-data";
-import { isSameDay, isWithinInterval, startOfWeek, endOfWeek, addHours, subHours, parseISO } from "date-fns";
+import {
+  StaffMember,
+  Shift,
+  LeaveRequest,
+  Availability,
+  StaffSuggestion,
+  SuggestionRank,
+  SHIFT_CONFIG,
+} from "./types"
+import { mockShifts, mockLeave, mockAvailability } from "./mock-data"
+import { isSameDay, isWithinInterval, startOfWeek, endOfWeek, parseISO, subDays } from "date-fns"
 
-// Calculate hours for a shift type
+function toDate(value: string | Date): Date {
+  return value instanceof Date ? value : parseISO(value)
+}
+
+function getStaffName(staff: StaffMember): string {
+  return `${staff.first_name} ${staff.last_name}`.trim()
+}
+
+function getAssignedStaffId(shift: Shift): string | null {
+  return shift.assignedStaffId ?? null
+}
+
+function getShiftType(shift: Shift) {
+  return shift.shiftType ?? shift.shift_type
+}
+
+function getRequiredRole(shift: Shift) {
+  return shift.roleRequired ?? shift.required_role
+}
+
 function getShiftHours(shiftType: string): number {
-  switch (shiftType) {
-    case "morning":
-      return 8;
-    case "kitchen-afternoon":
-      return 4;
-    case "evening":
-      return 8;
-    case "night":
-      return 8;
-    default:
-      return 8;
-  }
+  const config = SHIFT_CONFIG[shiftType as keyof typeof SHIFT_CONFIG]
+  if (!config) return 8
+
+  const startHour = Number(config.startTime.split(":")[0])
+  const endHour = Number(config.endTime.split(":")[0])
+
+  return endHour > startHour ? endHour - startHour : 24 - startHour + endHour
 }
 
-// Get weekly hours for a staff member
 export function getWeeklyHours(staffId: string, weekStartDate: Date): number {
-  const weekStart = startOfWeek(weekStartDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(weekStartDate, { weekStartsOn: 1 });
+  const weekStart = startOfWeek(weekStartDate, { weekStartsOn: 1 })
+  const weekEnd = endOfWeek(weekStartDate, { weekStartsOn: 1 })
 
-  const assignedShifts = mockShifts.filter(
-    (shift) =>
-      shift.assignedStaffId === staffId &&
-      isWithinInterval(shift.date, { start: weekStart, end: weekEnd })
-  );
+  const assignedShifts = mockShifts.filter((shift) => {
+    const shiftDate = toDate(shift.date)
+    return (
+      getAssignedStaffId(shift) === staffId &&
+      isWithinInterval(shiftDate, { start: weekStart, end: weekEnd })
+    )
+  })
 
-  return assignedShifts.reduce((total, shift) => total + getShiftHours(shift.shiftType), 0);
+  return assignedShifts.reduce((total, shift) => total + getShiftHours(getShiftType(shift)), 0)
 }
 
-// Check if staff is on leave
 export function isStaffOnLeave(staffId: string, date: Date): boolean {
-  return mockLeave.some(
-    (leave) =>
-      leave.staffId === staffId &&
-      (leave.status === "approved" || leave.status === "emergency") &&
-      isWithinInterval(date, { start: leave.startDate, end: leave.endDate })
-  );
+  return mockLeave.some((leave: LeaveRequest) => {
+    const start = leave.startDate ?? toDate(leave.start_date)
+    const end = leave.endDate ?? toDate(leave.end_date)
+
+    return (
+      (leave.staffId ?? leave.staff_id) === staffId &&
+      leave.status === "approved" &&
+      isWithinInterval(date, { start, end })
+    )
+  })
 }
 
-// Check if staff has submitted availability for a date
-export function getStaffAvailability(staffName: string, date: Date): { isAvailable: boolean; isPreferred: boolean } | null {
-  const availability = mockAvailability.find(
-    (a) =>
-      a.staffName === staffName &&
-      isWithinInterval(date, { start: a.startDate, end: a.endDate })
-  );
+export function getStaffAvailability(
+  staffName: string,
+  date: Date
+): { isAvailable: boolean; isPreferred: boolean } | null {
+  const availability = mockAvailability.find((record: Availability) => {
+    if (record.staffName && record.staffName !== staffName) return false
 
-  if (!availability) return null;
+    const start = record.startDate ?? toDate(record.effective_from)
+    const end = record.endDate ?? (record.effective_until ? toDate(record.effective_until) : start)
+    return isWithinInterval(date, { start, end })
+  })
 
-  const isUnavailable = availability.unavailableDates.some((d) => isSameDay(d, date));
-  const isAvailable = availability.availableDates.some((d) => isSameDay(d, date));
+  if (!availability) return null
+
+  const unavailableDates = availability.unavailableDates ?? []
+  const availableDates = availability.availableDates ?? []
+  const isUnavailable = unavailableDates.some((day) => isSameDay(day, date))
+  const isAvailable =
+    availability.is_available || availableDates.some((day) => isSameDay(day, date))
 
   return {
     isAvailable: isAvailable && !isUnavailable,
-    isPreferred: isAvailable,
-  };
+    isPreferred: isAvailable && !isUnavailable,
+  }
 }
 
-// Check if staff has a night shift before a morning shift
-export function hasUnsafeNightMorningSchedule(staffId: string, date: Date, shiftType: string): boolean {
-  if (shiftType !== "morning") return false;
+export function hasUnsafeNightMorningSchedule(
+  staffId: string,
+  date: Date,
+  shiftType: string
+): boolean {
+  if (shiftType !== "morning") return false
 
-  // Check if staff has night shift the previous day
-  const previousDay = subHours(date, 24);
-  const previousNightShift = mockShifts.find(
+  const previousDay = subDays(date, 1)
+  return mockShifts.some(
     (shift) =>
-      shift.assignedStaffId === staffId &&
-      isSameDay(shift.date, previousDay) &&
-      shift.shiftType === "night"
-  );
-
-  return !!previousNightShift;
+      getAssignedStaffId(shift) === staffId &&
+      isSameDay(toDate(shift.date), previousDay) &&
+      getShiftType(shift) === "night"
+  )
 }
 
-// Check if staff is already assigned to another shift on the same day
 export function isDoubleBooked(staffId: string, date: Date, excludeShiftId?: string): boolean {
   return mockShifts.some(
     (shift) =>
-      shift.assignedStaffId === staffId &&
-      isSameDay(shift.date, date) &&
+      getAssignedStaffId(shift) === staffId &&
+      isSameDay(toDate(shift.date), date) &&
       shift.id !== excludeShiftId
-  );
+  )
 }
 
-// Get staff suggestions for a shift
 export function getStaffSuggestions(
-  availableStaff: Staff[],
+  availableStaff: StaffMember[],
   shift: Shift
 ): StaffSuggestion[] {
-  const suggestions: StaffSuggestion[] = [];
-  const shiftConfig = SHIFT_CONFIG[shift.shiftType];
+  const suggestions: StaffSuggestion[] = []
+  const shiftType = getShiftType(shift)
+  const requiredRole = getRequiredRole(shift)
+  const shiftConfig = SHIFT_CONFIG[shiftType]
+  const shiftDate = toDate(shift.date)
 
   for (const staff of availableStaff) {
-    const warnings: string[] = [];
-    let rank: SuggestionRank = "best-match";
+    const warnings: string[] = []
+    let rank: SuggestionRank = "best-match"
+    let matchScore = 100
 
-    // Check role match
-    if (staff.role !== shift.roleRequired) {
-      warnings.push("Role does not match shift requirement");
-      rank = "not-suitable";
-      continue; // Skip staff with wrong role
+    if (requiredRole !== "ANY" && staff.role !== requiredRole) {
+      warnings.push("Role does not match shift requirement")
+      rank = "not-suitable"
+      matchScore -= 60
     }
 
-    // Check if shift type is valid for role
     if (!shiftConfig.roles.includes(staff.role)) {
-      warnings.push("Shift type not applicable for this role");
-      rank = "not-suitable";
-      continue;
+      warnings.push("Shift type is not suitable for this role")
+      rank = "not-suitable"
+      matchScore -= 40
     }
 
-    // Check if on leave
-    if (isStaffOnLeave(staff.id, shift.date)) {
-      warnings.push("Staff is on leave");
-      rank = "not-suitable";
-      continue;
+    if (isStaffOnLeave(staff.id, shiftDate)) {
+      warnings.push("Staff is on approved leave")
+      rank = "not-suitable"
+      matchScore -= 80
     }
 
-    // Check if already assigned to another shift
-    if (isDoubleBooked(staff.id, shift.date, shift.id)) {
-      warnings.push("Already assigned to another shift");
-      rank = "not-suitable";
-      continue;
+    if (isDoubleBooked(staff.id, shiftDate, shift.id)) {
+      warnings.push("Already assigned to another shift")
+      rank = "not-suitable"
+      matchScore -= 80
     }
 
-    // Check weekly hours
-    const weeklyHours = getWeeklyHours(staff.id, shift.date);
-    const shiftHours = getShiftHours(shift.shiftType);
-    if (weeklyHours + shiftHours > staff.maxWeeklyHours) {
-      warnings.push(`Would exceed weekly hours (${weeklyHours + shiftHours}/${staff.maxWeeklyHours})`);
-      rank = "warning";
+    const weeklyHours = getWeeklyHours(staff.id, shiftDate)
+    const shiftHours = getShiftHours(shiftType)
+    const maxHours = staff.contracted_hours ?? 38
+
+    if (weeklyHours + shiftHours > maxHours) {
+      warnings.push(`Would exceed weekly hours (${weeklyHours + shiftHours}/${maxHours})`)
+      if (rank === "best-match") rank = "warning"
+      matchScore -= 20
     }
 
-    // Check night-morning unsafe scheduling
-    if (hasUnsafeNightMorningSchedule(staff.id, shift.date, shift.shiftType)) {
-      warnings.push("Night shift followed by morning shift");
-      rank = "warning";
+    if (hasUnsafeNightMorningSchedule(staff.id, shiftDate, shiftType)) {
+      warnings.push("Night shift followed by morning shift")
+      if (rank === "best-match") rank = "warning"
+      matchScore -= 20
     }
 
-    // Check availability
-    const availability = getStaffAvailability(staff.name, shift.date);
-    if (availability) {
-      if (!availability.isAvailable) {
-        warnings.push("Marked as unavailable");
-        rank = rank === "best-match" ? "warning" : rank;
-      } else if (availability.isPreferred) {
-        // Boost rank if preferred
-        if (rank === "best-match" && staff.preferredShifts.includes(shift.shiftType)) {
-          // Keep as best match
-        }
-      }
+    const availability = getStaffAvailability(getStaffName(staff), shiftDate)
+    if (availability && !availability.isAvailable) {
+      warnings.push("Marked as unavailable")
+      if (rank === "best-match") rank = "warning"
+      matchScore -= 20
     }
 
-    // Check preferred shifts
-    if (!staff.preferredShifts.includes(shift.shiftType)) {
-      if (rank === "best-match") {
-        rank = "available";
-      }
-      warnings.push("Not a preferred shift type");
-    }
+    if (rank === "best-match" && warnings.length > 0) rank = "available"
 
     suggestions.push({
       staff,
       rank,
       warnings,
       weeklyHoursAssigned: weeklyHours,
-    });
+      matchScore: Math.max(0, matchScore),
+    })
   }
 
-  // Sort by rank priority
   const rankOrder: Record<SuggestionRank, number> = {
     "best-match": 0,
-    "available": 1,
-    "warning": 2,
+    available: 1,
+    warning: 2,
     "not-suitable": 3,
-  };
+  }
 
   return suggestions.sort((a, b) => {
-    const rankDiff = rankOrder[a.rank] - rankOrder[b.rank];
-    if (rankDiff !== 0) return rankDiff;
-    // Secondary sort by weekly hours (prefer less worked)
-    return a.weeklyHoursAssigned - b.weeklyHoursAssigned;
-  });
+    const rankDiff = rankOrder[a.rank] - rankOrder[b.rank]
+    if (rankDiff !== 0) return rankDiff
+    if (b.matchScore !== a.matchScore) return b.matchScore - a.matchScore
+    return a.weeklyHoursAssigned - b.weeklyHoursAssigned
+  })
 }
 
-// Validate roster for issues
 export interface RosterWarning {
-  shiftId: string;
-  staffId?: string;
-  type: string;
-  message: string;
-  severity: "error" | "warning";
+  shiftId: string
+  staffId?: string
+  type: string
+  message: string
+  severity: "error" | "warning"
 }
 
-export function validateRoster(shifts: Shift[], staff: Staff[]): RosterWarning[] {
-  const warnings: RosterWarning[] = [];
+export function validateRoster(shifts: Shift[], staff: StaffMember[]): RosterWarning[] {
+  const warnings: RosterWarning[] = []
 
   for (const shift of shifts) {
-    // Check unfilled shifts
-    if (!shift.assignedStaffId) {
+    const shiftType = getShiftType(shift)
+    const requiredRole = getRequiredRole(shift)
+    const assignedStaffId = getAssignedStaffId(shift)
+    const shiftDate = toDate(shift.date)
+
+    if (!assignedStaffId) {
       warnings.push({
         shiftId: shift.id,
         type: "unfilled",
-        message: `Unfilled ${SHIFT_CONFIG[shift.shiftType].label} shift`,
+        message: `Unfilled ${SHIFT_CONFIG[shiftType].label} shift`,
         severity: shift.status === "urgent" ? "error" : "warning",
-      });
-      continue;
+      })
+      continue
     }
 
-    const assignedStaff = staff.find((s) => s.id === shift.assignedStaffId);
-    if (!assignedStaff) continue;
+    const assignedStaff = staff.find((member) => member.id === assignedStaffId)
+    if (!assignedStaff) continue
 
-    // Check role mismatch
-    if (assignedStaff.role !== shift.roleRequired) {
+    const staffName = getStaffName(assignedStaff)
+
+    if (requiredRole !== "ANY" && assignedStaff.role !== requiredRole) {
       warnings.push({
         shiftId: shift.id,
         staffId: assignedStaff.id,
         type: "role-mismatch",
-        message: `${assignedStaff.name} (${assignedStaff.role}) assigned to ${shift.roleRequired} shift`,
+        message: `${staffName} (${assignedStaff.role}) assigned to ${requiredRole} shift`,
         severity: "error",
-      });
+      })
     }
 
-    // Check leave conflict
-    if (isStaffOnLeave(assignedStaff.id, shift.date)) {
+    if (isStaffOnLeave(assignedStaff.id, shiftDate)) {
       warnings.push({
         shiftId: shift.id,
         staffId: assignedStaff.id,
         type: "leave-conflict",
-        message: `${assignedStaff.name} is on leave`,
+        message: `${staffName} is on leave`,
         severity: "error",
-      });
+      })
     }
 
-    // Check double booking
     const otherShiftsSameDay = shifts.filter(
-      (s) =>
-        s.id !== shift.id &&
-        s.assignedStaffId === assignedStaff.id &&
-        isSameDay(s.date, shift.date)
-    );
+      (candidate) =>
+        candidate.id !== shift.id &&
+        getAssignedStaffId(candidate) === assignedStaff.id &&
+        isSameDay(toDate(candidate.date), shiftDate)
+    )
+
     if (otherShiftsSameDay.length > 0) {
       warnings.push({
         shiftId: shift.id,
         staffId: assignedStaff.id,
         type: "double-booked",
-        message: `${assignedStaff.name} has multiple shifts on this day`,
+        message: `${staffName} has multiple shifts on this day`,
         severity: "error",
-      });
+      })
     }
 
-    // Check night-morning
-    if (hasUnsafeNightMorningSchedule(assignedStaff.id, shift.date, shift.shiftType)) {
+    if (hasUnsafeNightMorningSchedule(assignedStaff.id, shiftDate, shiftType)) {
       warnings.push({
         shiftId: shift.id,
         staffId: assignedStaff.id,
         type: "unsafe-schedule",
-        message: `${assignedStaff.name} has night shift followed by morning shift`,
+        message: `${staffName} has night shift followed by morning shift`,
         severity: "warning",
-      });
+      })
     }
 
-    // Check weekly hours
-    const weeklyHours = getWeeklyHours(assignedStaff.id, shift.date);
-    if (weeklyHours > assignedStaff.maxWeeklyHours) {
+    const weeklyHours = getWeeklyHours(assignedStaff.id, shiftDate)
+    const maxHours = assignedStaff.contracted_hours ?? 38
+
+    if (weeklyHours > maxHours) {
       warnings.push({
         shiftId: shift.id,
         staffId: assignedStaff.id,
         type: "hours-exceeded",
-        message: `${assignedStaff.name} exceeds weekly hours (${weeklyHours}/${assignedStaff.maxWeeklyHours})`,
+        message: `${staffName} exceeds weekly hours (${weeklyHours}/${maxHours})`,
         severity: "warning",
-      });
+      })
     }
   }
 
-  return warnings;
+  return warnings
 }

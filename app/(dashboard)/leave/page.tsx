@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { AppHeader } from "@/components/app-header"
 import { LeaveClient } from "@/components/leave/leave-client"
 import { getLeaveRequests, getActiveStaffMembers } from "@/lib/db"

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { AppHeader } from "@/components/app-header"
 import { DashboardStats } from "@/components/dashboard/dashboard-stats"
 import { TodayRoster } from "@/components/dashboard/today-roster"
