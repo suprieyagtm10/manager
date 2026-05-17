@@ -82,7 +82,7 @@ export function RosterClient({ initialShifts, staff }: RosterClientProps) {
             shift_type: shiftData.shift_type || "morning",
             start_time: shiftData.start_time || "07:00",
             end_time: shiftData.end_time || "15:00",
-            required_role: shiftData.required_role || "AIN",
+            required_role: shiftData.required_role || "PCA",
             status: "unfilled",
             notes: shiftData.notes || "",
           })

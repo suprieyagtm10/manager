@@ -1,8 +1,8 @@
 // Database Types matching Supabase schema
 
-export type StaffRole = "RN" | "EN" | "AIN" | "ADMIN"
+export type StaffRole = "RN" | "EN" | "PCA" | "FSA" | "CHEF" | "ADMIN"
 export type EmploymentType = "full-time" | "part-time" | "casual"
-export type ShiftType = "morning" | "afternoon" | "night"
+export type ShiftType = "morning" | "kitchen_afternoon" | "care_afternoon" | "night"
 export type ShiftStatus = "unfilled" | "filled" | "partial" | "urgent"
 export type AssignmentStatus = "assigned" | "confirmed" | "completed" | "cancelled" | "no-show"
 export type LeaveType = "annual" | "sick" | "personal" | "unpaid" | "other" | "emergency"
@@ -135,6 +135,24 @@ export interface Warning {
   created_at: string
 }
 
+
+export interface WorkingHoursEntry {
+  id: string
+  staff_id: string
+  work_date: string
+  start_time: string
+  end_time: string
+  break_minutes: number
+  total_hours: number
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface WorkingHoursEntryWithStaff extends WorkingHoursEntry {
+  staff_members?: StaffMember | null
+}
+
 // Extended types with joins
 export interface ShiftWithAssignment extends Shift {
   shift_assignments: (ShiftAssignment & {
@@ -180,45 +198,67 @@ export const SHIFT_CONFIG: Record<
   }
 > = {
   morning: {
-    label: "Morning",
-    startTime: "06:00",
-    endTime: "14:00",
-    roles: ["RN", "EN", "AIN"],
+    label: "Morning 7am-3pm",
+    startTime: "07:00",
+    endTime: "15:00",
+    roles: ["RN", "EN", "PCA", "FSA", "CHEF"],
   },
-  afternoon: {
-    label: "Afternoon",
-    startTime: "14:00",
-    endTime: "22:00",
-    roles: ["RN", "EN", "AIN"],
+  kitchen_afternoon: {
+    label: "Kitchen 3pm-7pm",
+    startTime: "15:00",
+    endTime: "19:00",
+    roles: ["FSA", "CHEF"],
+  },
+  care_afternoon: {
+    label: "Care 3pm-11pm",
+    startTime: "15:00",
+    endTime: "23:00",
+    roles: ["RN", "EN", "PCA"],
   },
   night: {
-    label: "Night",
-    startTime: "22:00",
-    endTime: "06:00",
-    roles: ["RN", "EN"],
+    label: "Night 11pm-7am",
+    startTime: "23:00",
+    endTime: "07:00",
+    roles: ["RN", "EN", "PCA"],
   },
 }
 
-export const ROLE_CONFIG: Record<StaffRole, { label: string; bgColor: string; textColor: string }> = {
+export const ROLE_CONFIG: Record<StaffRole, { label: string; group: "Nursing" | "Kitchen" | "Admin"; bgColor: string; textColor: string }> = {
   RN: {
     label: "Registered Nurse",
+    group: "Nursing",
     bgColor: "bg-blue-100",
     textColor: "text-blue-700",
   },
   EN: {
     label: "Enrolled Nurse",
+    group: "Nursing",
     bgColor: "bg-purple-100",
     textColor: "text-purple-700",
   },
-  AIN: {
-    label: "Assistant in Nursing",
-    bgColor: "bg-green-100",
-    textColor: "text-green-700",
+  PCA: {
+    label: "Personal Care Assistant",
+    group: "Nursing",
+    bgColor: "bg-emerald-100",
+    textColor: "text-emerald-700",
+  },
+  FSA: {
+    label: "Food Services Assistant",
+    group: "Kitchen",
+    bgColor: "bg-amber-100",
+    textColor: "text-amber-700",
+  },
+  CHEF: {
+    label: "Chef",
+    group: "Kitchen",
+    bgColor: "bg-orange-100",
+    textColor: "text-orange-700",
   },
   ADMIN: {
     label: "Administrator",
-    bgColor: "bg-gray-100",
-    textColor: "text-gray-700",
+    group: "Admin",
+    bgColor: "bg-slate-100",
+    textColor: "text-slate-700",
   },
 }
 

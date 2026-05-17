@@ -11,6 +11,7 @@ import type {
   StaffMemberWithCertifications,
   LeaveRequestWithStaff,
   WarningWithRelations,
+  WorkingHoursEntryWithStaff,
   Facility,
 } from "@/lib/types"
 
@@ -242,6 +243,27 @@ export async function deleteShiftAssignment(id: string): Promise<void> {
   const { error } = await supabase.from("shift_assignments").delete().eq("id", id)
 
   if (error) throw error
+}
+
+// Working Hours
+export async function getWorkingHours(): Promise<WorkingHoursEntryWithStaff[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("working_hours")
+    .select(`
+      *,
+      staff_members (*)
+    `)
+    .order("work_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(100)
+
+  if (error) {
+    console.warn("Working hours table unavailable:", error.message)
+    return []
+  }
+
+  return data || []
 }
 
 // Leave Requests

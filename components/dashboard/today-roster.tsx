@@ -16,7 +16,9 @@ export function TodayRoster({ shifts }: TodayRosterProps) {
     switch (type) {
       case "morning":
         return "bg-amber-100 text-amber-700"
-      case "afternoon":
+      case "kitchen_afternoon":
+        return "bg-orange-100 text-orange-700"
+      case "care_afternoon":
         return "bg-blue-100 text-blue-700"
       case "night":
         return "bg-purple-100 text-purple-700"

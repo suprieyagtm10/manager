@@ -37,10 +37,10 @@ export function AssignStaffDialog({
   const matchingRoleStaff = staff.filter((s) => {
     // Allow staff of same role or higher qualified
     if (s.role === shift.required_role) return true
-    // RN can cover EN and AIN shifts
-    if (s.role === "RN" && (shift.required_role === "EN" || shift.required_role === "AIN")) return true
-    // EN can cover AIN shifts
-    if (s.role === "EN" && shift.required_role === "AIN") return true
+    // RN can cover EN and PCA shifts
+    if (s.role === "RN" && (shift.required_role === "EN" || shift.required_role === "PCA")) return true
+    // EN can cover PCA shifts
+    if (s.role === "EN" && shift.required_role === "PCA") return true
     return false
   })
 

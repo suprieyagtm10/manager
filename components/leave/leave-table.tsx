@@ -68,7 +68,7 @@ export function LeaveTable({ leaves, onEdit, onStatusChange, onDelete }: LeaveTa
         <TableBody>
           {leaves.map((leave) => {
             const staff = leave.staff_members
-            const roleConfig = ROLE_CONFIG[staff?.role || "AIN"]
+            const roleConfig = ROLE_CONFIG[staff?.role || "PCA"]
             const statusConfig = LEAVE_STATUS_CONFIG[leave.status]
             const startDate = parseISO(leave.start_date)
             const endDate = parseISO(leave.end_date)

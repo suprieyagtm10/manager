@@ -61,7 +61,7 @@ export const mockStaff: StaffMember[] = [
     last_name: "Williams",
     email: "emma.williams@email.com",
     phone: "0434 567 890",
-    role: "AIN",
+    role: "PCA",
     employment_type: "part-time",
     status: "active",
     contracted_hours: 24,
@@ -71,6 +71,41 @@ export const mockStaff: StaffMember[] = [
     created_at: timestamp(150),
     updated_at: timestamp(1),
   },
+
+  {
+    id: "s5",
+    user_id: null,
+    first_name: "Priya",
+    last_name: "Sharma",
+    email: "priya.sharma@email.com",
+    phone: "0456 789 012",
+    role: "FSA",
+    employment_type: "part-time",
+    status: "active",
+    contracted_hours: 25,
+    hourly_rate: 29,
+    facility_id: null,
+    hire_date: date(-90),
+    created_at: timestamp(90),
+    updated_at: timestamp(1),
+  },
+  {
+    id: "s6",
+    user_id: null,
+    first_name: "Liam",
+    last_name: "O'Connor",
+    email: "liam.oconnor@email.com",
+    phone: "0467 890 123",
+    role: "CHEF",
+    employment_type: "full-time",
+    status: "active",
+    contracted_hours: 38,
+    hourly_rate: 36,
+    facility_id: null,
+    hire_date: date(-220),
+    created_at: timestamp(220),
+    updated_at: timestamp(1),
+  },
   {
     id: "s4",
     user_id: null,
@@ -78,7 +113,7 @@ export const mockStaff: StaffMember[] = [
     last_name: "Brown",
     email: "james.brown@email.com",
     phone: "0445 678 901",
-    role: "AIN",
+    role: "PCA",
     employment_type: "casual",
     status: "active",
     contracted_hours: 20,
@@ -92,12 +127,13 @@ export const mockStaff: StaffMember[] = [
 
 function generateShifts(): Shift[] {
   const shifts: Shift[] = []
-  const shiftTypes: ShiftType[] = ["morning", "afternoon", "night"]
-  const roles: (StaffRole | "ANY")[] = ["RN", "EN", "AIN"]
+  const shiftTypes: ShiftType[] = ["morning", "kitchen_afternoon", "care_afternoon", "night"]
+  const roles: (StaffRole | "ANY")[] = ["RN", "EN", "PCA", "FSA", "CHEF"]
 
   for (let dayOffset = -3; dayOffset <= 10; dayOffset++) {
     for (const shiftType of shiftTypes) {
       for (const role of roles) {
+        if ((shiftType === "kitchen_afternoon" && !["FSA", "CHEF"].includes(role)) || ((shiftType === "care_afternoon" || shiftType === "night") && ["FSA", "CHEF"].includes(role))) continue
         shifts.push({
           id: `shift-${dayOffset}-${shiftType}-${role}`,
           facility_id: null,
@@ -105,19 +141,21 @@ function generateShifts(): Shift[] {
           shift_type: shiftType,
           start_time:
             shiftType === "morning"
-              ? "06:00"
-              : shiftType === "afternoon"
-                ? "14:00"
-                : "22:00",
+              ? "07:00"
+              : shiftType === "kitchen_afternoon" || shiftType === "care_afternoon"
+                ? "15:00"
+                : "23:00",
           end_time:
             shiftType === "morning"
-              ? "14:00"
-              : shiftType === "afternoon"
-                ? "22:00"
-                : "06:00",
+              ? "15:00"
+              : shiftType === "kitchen_afternoon"
+                ? "19:00"
+                : shiftType === "care_afternoon"
+                  ? "23:00"
+                  : "07:00",
           required_role: role,
-          status: dayOffset === 2 && role === "AIN" ? "unfilled" : "filled",
-          notes: dayOffset === 2 && role === "AIN" ? "Need replacement" : null,
+          status: dayOffset === 2 && role === "PCA" ? "unfilled" : "filled",
+          notes: dayOffset === 2 && role === "PCA" ? "Need replacement" : null,
           created_at: timestamp(10),
           updated_at: timestamp(1),
         })
@@ -188,7 +226,7 @@ export const mockAvailability: Availability[] = [
     id: "a2",
     staff_id: "s4",
     day_of_week: 2,
-    shift_type: "afternoon",
+    shift_type: "care_afternoon",
     is_available: true,
     effective_from: today,
     effective_until: null,

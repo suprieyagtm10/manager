@@ -123,3 +123,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer base {
+  :root {
+    --background: oklch(0.985 0.018 155);
+    --primary: oklch(0.46 0.13 155);
+    --ring: oklch(0.62 0.14 155);
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.14), transparent 32rem),
+      linear-gradient(135deg, rgba(240, 253, 244, 0.96), rgba(248, 250, 252, 0.98));
+  }
+}
+
+@layer components {
+  .interactive-card {
+    @apply rounded-2xl border-emerald-100/80 bg-card/95 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-900/5;
+  }
+
+  .soft-panel {
+    @apply rounded-2xl border border-emerald-100/80 bg-white/80 shadow-sm backdrop-blur;
+  }
+}

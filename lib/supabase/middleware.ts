@@ -7,6 +7,7 @@ const PROTECTED_ROUTES = [
   '/roster',
   '/leave',
   '/availability',
+  '/hours',
   '/reports',
   '/rules',
   '/settings',

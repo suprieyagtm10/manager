@@ -151,7 +151,8 @@ function DayView({
 }) {
   const shiftsByType = {
     morning: shifts.filter((s) => s.shift_type === "morning"),
-    afternoon: shifts.filter((s) => s.shift_type === "afternoon"),
+    kitchen_afternoon: shifts.filter((s) => s.shift_type === "kitchen_afternoon"),
+    care_afternoon: shifts.filter((s) => s.shift_type === "care_afternoon"),
     night: shifts.filter((s) => s.shift_type === "night"),
   }
 

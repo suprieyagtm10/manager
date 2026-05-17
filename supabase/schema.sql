@@ -20,7 +20,7 @@ create table if not exists staff_members (
   last_name text not null,
   email text not null,
   phone text,
-  role text not null check (role in ('RN','EN','AIN','ADMIN')),
+  role text not null check (role in ('RN','EN','PCA','FSA','CHEF','ADMIN')),
   employment_type text not null check (employment_type in ('full-time','part-time','casual')),
   status text not null default 'active' check (status in ('active','inactive','on-leave')),
   contracted_hours numeric,
@@ -45,11 +45,11 @@ create table if not exists shifts (
   id uuid primary key default gen_random_uuid(),
   facility_id uuid references facilities(id) on delete set null,
   date date not null,
-  shift_type text not null check (shift_type in ('morning','afternoon','night')),
+  shift_type text not null check (shift_type in ('morning','kitchen_afternoon','care_afternoon','night')),
   start_time time not null,
   end_time time not null,
-  required_role text not null check (required_role in ('RN','EN','AIN','ADMIN','ANY')),
-  status text not null default 'unfilled' check (status in ('unfilled','filled','partial')),
+  required_role text not null check (required_role in ('RN','EN','PCA','FSA','CHEF','ADMIN','ANY')),
+  status text not null default 'unfilled' check (status in ('unfilled','filled','partial','urgent')),
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -85,13 +85,26 @@ create table if not exists availability (
   id uuid primary key default gen_random_uuid(),
   staff_id uuid not null references staff_members(id) on delete cascade,
   day_of_week integer not null check (day_of_week between 0 and 6),
-  shift_type text not null check (shift_type in ('morning','afternoon','night')),
+  shift_type text not null check (shift_type in ('morning','kitchen_afternoon','care_afternoon','night')),
   is_available boolean not null default true,
   effective_from date not null default current_date,
   effective_until date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (staff_id, day_of_week, shift_type, effective_from)
+);
+
+create table if not exists working_hours (
+  id uuid primary key default gen_random_uuid(),
+  staff_id uuid not null references staff_members(id) on delete cascade,
+  work_date date not null default current_date,
+  start_time time not null,
+  end_time time not null,
+  break_minutes integer not null default 0 check (break_minutes >= 0),
+  total_hours numeric not null check (total_hours >= 0),
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table if not exists warnings (
@@ -115,14 +128,18 @@ insert into staff_members (first_name, last_name, email, phone, role, employment
 values
   ('Sarah', 'Johnson', 'sarah.johnson@example.com', '0400000001', 'RN', 'full-time', 'active', 38, 45, '00000000-0000-0000-0000-000000000001', current_date - 700),
   ('David', 'Martinez', 'david.martinez@example.com', '0400000002', 'EN', 'part-time', 'active', 30, 38, '00000000-0000-0000-0000-000000000001', current_date - 400),
-  ('Ava', 'Brown', 'ava.brown@example.com', '0400000003', 'AIN', 'casual', 'active', 24, 32, '00000000-0000-0000-0000-000000000001', current_date - 250)
+  ('Ava', 'Brown', 'ava.brown@example.com', '0400000003', 'PCA', 'casual', 'active', 24, 32, '00000000-0000-0000-0000-000000000001', current_date - 250),
+  ('Priya', 'Sharma', 'priya.sharma@example.com', '0400000004', 'FSA', 'part-time', 'active', 25, 29, '00000000-0000-0000-0000-000000000001', current_date - 180),
+  ('Liam', 'O''Connor', 'liam.oconnor@example.com', '0400000005', 'CHEF', 'full-time', 'active', 38, 36, '00000000-0000-0000-0000-000000000001', current_date - 320)
 on conflict do nothing;
 
 insert into shifts (facility_id, date, shift_type, start_time, end_time, required_role, status, notes)
 values
-  ('00000000-0000-0000-0000-000000000001', current_date, 'morning', '06:00', '14:00', 'RN', 'unfilled', 'Morning medication round'),
-  ('00000000-0000-0000-0000-000000000001', current_date, 'afternoon', '14:00', '22:00', 'AIN', 'unfilled', 'Resident care support'),
-  ('00000000-0000-0000-0000-000000000001', current_date + 1, 'night', '22:00', '06:00', 'EN', 'unfilled', null)
+  ('00000000-0000-0000-0000-000000000001', current_date, 'morning', '07:00', '15:00', 'RN', 'unfilled', 'Morning medication round'),
+  ('00000000-0000-0000-0000-000000000001', current_date, 'morning', '07:00', '15:00', 'FSA', 'unfilled', 'Breakfast and lunch service'),
+  ('00000000-0000-0000-0000-000000000001', current_date, 'kitchen_afternoon', '15:00', '19:00', 'CHEF', 'unfilled', 'Dinner service'),
+  ('00000000-0000-0000-0000-000000000001', current_date, 'care_afternoon', '15:00', '23:00', 'PCA', 'unfilled', 'Resident care support'),
+  ('00000000-0000-0000-0000-000000000001', current_date + 1, 'night', '23:00', '07:00', 'EN', 'unfilled', null)
 on conflict do nothing;
 
 alter table facilities enable row level security;
@@ -132,6 +149,7 @@ alter table shifts enable row level security;
 alter table shift_assignments enable row level security;
 alter table leave_requests enable row level security;
 alter table availability enable row level security;
+alter table working_hours enable row level security;
 alter table warnings enable row level security;
 
 create policy "authenticated read facilities" on facilities for select to authenticated using (true);
@@ -148,5 +166,7 @@ create policy "authenticated read leave" on leave_requests for select to authent
 create policy "authenticated write leave" on leave_requests for all to authenticated using (true) with check (true);
 create policy "authenticated read availability" on availability for select to authenticated using (true);
 create policy "authenticated write availability" on availability for all to authenticated using (true) with check (true);
+create policy "authenticated read working hours" on working_hours for select to authenticated using (true);
+create policy "authenticated write working hours" on working_hours for all to authenticated using (true) with check (true);
 create policy "authenticated read warnings" on warnings for select to authenticated using (true);
 create policy "authenticated write warnings" on warnings for all to authenticated using (true) with check (true);

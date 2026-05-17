@@ -7,7 +7,7 @@ import { Database, ShieldCheck, Users, CalendarDays, Info } from "lucide-react"
 
 const requiredTables = [
   { name: "facilities", description: "Facility details used by staff and shifts." },
-  { name: "staff_members", description: "Nurses, PCAs/AINs, admins, employment type, hours and status." },
+  { name: "staff_members", description: "Nurses, PCAs/PCAs, admins, employment type, hours and status." },
   { name: "shifts", description: "Roster shifts, required role, dates, times and fill status." },
   { name: "shift_assignments", description: "Which staff member is assigned to each shift." },
   { name: "leave_requests", description: "Annual, sick, personal, unpaid and emergency leave records." },

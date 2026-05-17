@@ -31,7 +31,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
-    role: "AIN" as StaffRole,
+    role: "PCA" as StaffRole,
     phone: "",
     email: "",
     employment_type: "casual" as EmploymentType,
@@ -57,7 +57,7 @@ export function StaffDialog({ open, onOpenChange, staff, onSave }: StaffDialogPr
       setFormData({
         first_name: "",
         last_name: "",
-        role: "AIN",
+        role: "PCA",
         phone: "",
         email: "",
         employment_type: "casual",

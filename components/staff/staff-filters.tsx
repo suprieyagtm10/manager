@@ -51,7 +51,9 @@ export function StaffFilters({
           <SelectItem value="all">All Roles</SelectItem>
           <SelectItem value="RN">Registered Nurse</SelectItem>
           <SelectItem value="EN">Enrolled Nurse</SelectItem>
-          <SelectItem value="AIN">Assistant in Nursing</SelectItem>
+          <SelectItem value="PCA">Personal Care Assistant</SelectItem>
+          <SelectItem value="FSA">Food Services Assistant</SelectItem>
+          <SelectItem value="CHEF">Chef</SelectItem>
           <SelectItem value="ADMIN">Administrator</SelectItem>
         </SelectContent>
       </Select>

@@ -41,7 +41,7 @@ export function ShiftDialog({
 }: ShiftDialogProps) {
   const [formData, setFormData] = useState({
     shift_type: "morning" as ShiftType,
-    required_role: "AIN" as StaffRole,
+    required_role: "PCA" as StaffRole,
     notes: "",
   })
 
@@ -55,7 +55,7 @@ export function ShiftDialog({
     } else {
       setFormData({
         shift_type: "morning",
-        required_role: "AIN",
+        required_role: "PCA",
         notes: "",
       })
     }
